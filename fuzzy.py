@@ -32,7 +32,8 @@ def fcm(data, cluster_n, expo=2, max_iter=100, min_impro=1e-5, display=True,
                 break
 
     obj_fcn = obj_fcn[:(i + 1)]  # Actual number of iterations
-    return center, U, obj_fcn
+    labels = np.argmax(U, axis=0)
+    return center, U, obj_fcn, labels
 
 
 def stepfcm(data, U, cluster_n, expo):
@@ -41,12 +42,11 @@ def stepfcm(data, U, cluster_n, expo):
     # performs one iteration of fuzzy c-mean clustering, where
     #
     # DATA: matrix of data to be clustered. (Each row is a data point.)
-    # U: partition matrix. (U(i,j) is the MF value of data j in cluster j.)
+    # U: partition matrix. (U(i,j) is the MF value of data j in cluster i.)
     # CLUSTER_N: number of clusters.
     # EXPO: exponent (> 1) for the partition matrix.
     # U_NEW: new partition matrix.
     # CENTER: center of clusters. (Each row is a center.)
-    # ERR: objective function for partition U.
     #
     # Note that the situation of "singularity" (one of the data points is
     # exactly the same as one of the cluster centers) is not checked.
@@ -88,7 +88,7 @@ def distfcm(center, data):
                 , 2), axis=1))
     else:  # 1-D data
         for k in range(center.shape[0]):
-            out[k, :] = np.abs(center[k]-data).transpose()  # TODO: test
+            out[k, :] = np.abs(center[k]-data).transpose()
 
     return out
 

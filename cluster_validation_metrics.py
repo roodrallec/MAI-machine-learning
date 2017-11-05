@@ -6,6 +6,8 @@ from sklearn.metrics import adjusted_rand_score, calinski_harabaz_score
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
+np.random.seed(100)
+
 # Data Import
 iris, iris_meta = arff.loadarff("datasets/iris.arff")
 iris_data = np.array([iris['sepallength'], iris['sepalwidth'],

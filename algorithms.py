@@ -9,6 +9,72 @@ from sklearn.datasets import make_blobs
 import sklearn.metrics.cluster as sk_cluster_m
 import sklearn.metrics as skmetrics
 
+
+def Bk_means(X, K, k_means_iter=1, log_level=1):
+    # Bk_means(X=ndarray, K=Int, k_means_iter=3)
+    # X: data to cluster
+    # K: number of clusters
+    # k_means_iter: number of iteretations on the kmeans call. # of split cluster pairs.
+    # log_level: 0 : no messages, 1 print messages
+
+    # Initialize cluster  assigment with all data
+    clusters = np.zeros((X.shape[0], 1))
+
+    print "Computing Bisecting Kmeans with K=", K, "Iterations of internal kmeans splitting:", k_means_iter
+    # Set initial number of cluster to 1 and iterate until number of clusters=K
+
+    for k in range(1, K):
+        if log_level:
+            print "*********** NEW ITERATION ************* ", k
+        similarity = []
+        potential_new_clusters = {}
+
+        if log_level:
+            print "*********select cluster to split******"
+
+        larger_cluster_index = select_split_cluster(clusters, "larger",
+                                                    log_level)  # options: larger, heterogeny,
+        if log_level:
+            print "Selected cluster: ", larger_cluster_index
+
+        kmeans_data = X[np.where(clusters == larger_cluster_index), :]
+        kmeans_data = kmeans_data[0]
+
+        if log_level:
+            print "*********Generate 2 clusters with Kmeans ******"
+            print "*********Best of ", k_means_iter, " results ******"
+
+        for i in range(0, k_means_iter):
+            # if k_means_iter >1 then we select best k_means split with similarity
+            # potential_new_clusters[i] = KMeans(2, "random",1).fit_predict(kmeans_data)
+            # potential_new_clusters[i] = KMeans(2).fit_predict(kmeans_data)
+            # call to our kmeans function
+            if log_level:
+                print k_means(2, kmeans_data)
+            potential_new_clusters[i] = \
+            k_means(2, kmeans_data)[1]
+            similarity.append(
+                cost_function(kmeans_data, potential_new_clusters[i],
+                              log_level))
+
+        # Select division based on similarity (min value max similarity)
+        selected_division = potential_new_clusters[
+            similarity.index(min(similarity))]
+
+        if log_level:
+            print "Selected case: ", similarity.index(min(similarity))
+
+        new_clusters = selected_division
+        new_clusters[np.where(selected_division == 1)] = k
+        new_clusters[np.where(selected_division == 0)] = larger_cluster_index
+
+        clusters[np.where(clusters[:] == larger_cluster_index)] = new_clusters
+
+    if log_level:
+        print "****** END OF BKmeans *********\n\n\n"
+    return clusters.flatten()
+
+
 def squares_dist(x):
     # squares_dist(x=ndarray):
     # x: matrix N,M. N rows of data variables.
@@ -30,7 +96,7 @@ def cost_function(data_n, clusters_n, log_level=1):
                     range(len(np.unique(clusters_n)))])
 
     # vector of mu feature values of the associated cluster for each data variable
-    mus_complete = np.empty([clusters_n.shape[0], 4])
+    mus_complete = np.empty([clusters_n.shape[0], data_n.shape[1]])
 
     for k in range(len(np.unique(clusters_n))):
         mus_complete[np.where(clusters_n == k)] = mus[k]
@@ -65,67 +131,6 @@ def select_split_cluster(clusters, criteria="larger", log_level=1):
             print "Number of x in each cluster:", number_of_x
 
     return selected_key_c
-
-
-def Bk_means(X, K, k_means_iter=3, log_level=1):
-    # Bk_means(X=ndarray, K=Int, k_means_iter=3)
-    # X: data to cluster
-    # K: number of clusters
-    # k_means_iter: number of iteretations on the kmeans call. # of split cluster pairs.
-    # log_level: 0 : no messages, 1 print messages
-
-    # Initialize cluster  assigment with all data
-    clusters = np.zeros((X.shape[0], 1))
-
-    # Set initial number of cluster to 1 and iterate until number of clusters=K
-
-    for k in range(1, K):
-        if log_level:
-            print "*********** NEW ITERATION ************* ", k
-        similarity = []
-        potential_new_clusters = {}
-
-        if log_level:
-            print "*********select cluster to split******"
-
-        larger_cluster_index = select_split_cluster(clusters, "larger",
-                                                    log_level)  # options: larger, heterogeny,
-        if log_level:
-            print "Selected cluster: ", larger_cluster_index
-
-        kmeans_data = X[np.where(clusters == larger_cluster_index), :]
-        kmeans_data = kmeans_data[0]
-
-        if log_level:
-            print "*********Generate 2 clusters with Kmeans ******"
-            print "*********Best of ", k_means_iter, " results ******"
-
-        for i in range(0, k_means_iter):
-            # if k_means_iter >1 then we select best k_means split with similarity
-            # potential_new_clusters[i] = KMeans(2, "random",1).fit_predict(kmeans_data)
-            potential_new_clusters[i] = KMeans(2).fit_predict(kmeans_data)
-            similarity.append(
-                cost_function(kmeans_data, potential_new_clusters[i],
-                              log_level))
-
-        # Select division based on similarity (min value max similarity)
-        selected_division = potential_new_clusters[
-            similarity.index(min(similarity))]
-
-        if log_level:
-            print "Selected case: ", similarity.index(min(similarity))
-
-        new_clusters = selected_division
-        new_clusters[np.where(selected_division == 1)] = k
-        new_clusters[np.where(selected_division == 0)] = larger_cluster_index
-
-        clusters[np.where(clusters[:] == larger_cluster_index)] = new_clusters
-
-    if log_level:
-        print "****** END OF BKmeans *********\n\n\n"
-    return clusters.flatten()
-
-
 
 # KMEANS
 

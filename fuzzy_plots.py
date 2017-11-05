@@ -35,11 +35,22 @@ def compare_k_m_values(data, labels_true, k_range=range(2, 11),
     plt.show()
 
 
-def compute_ztest(data, k):
+def compute_ztest(data, k, zscores=False):
 
-    _, labels_km = k_means(k, data)
-    labels_bkm = Bk_means(data, k)
-    _, _, _, labels_fcm = fcm(data, k, max_iter=1000)
+    if zscores:
+        data_zs = data.copy()
+        # z-scores
+        for i in range(data_zs.shape[1]):
+            data_zs[:, i] = (data_zs[:, i] - np.mean(data_zs[:, i])
+                             ) / np.std(data_zs[:, i])
+
+        _, labels_km = k_means(k, data_zs)
+        labels_bkm = Bk_means(data_zs, k)
+        _, _, _, labels_fcm = fcm(data_zs, k, max_iter=1000)
+    else:
+        _, labels_km = k_means(k, data)
+        labels_bkm = Bk_means(data, k)
+        _, _, _, labels_fcm = fcm(data, k, max_iter=1000)
 
     ml = [("km", labels_km), ("bkm", labels_bkm), ("fcm", labels_fcm)]
     for method, labels in ml:
@@ -86,3 +97,20 @@ def compute_ztest(data, k):
 # compare_k_m_values(bal_data, bal_class)
 # compute_ztest(bal_data, 3)
 
+# Wine Dataset
+wine, wine_meta = arff.loadarff("datasets/wine.arff")
+wine_data = np.array([wine['a1'], wine['a2'], wine['a3'], wine['a4'], wine['a5'],
+                     wine['a6'], wine['a7'], wine['a8'], wine['a9'], wine['a10'],
+                     wine['a11'], wine['a12'], wine['a13']]).transpose()
+wine_class = wine['class'].reshape((178, 1))
+
+wine_data_zs = wine_data.copy()
+
+# z-scores
+for j in range(wine_data.shape[1]):
+    wine_data_zs[:, j] = (wine_data_zs[:, j] - np.mean(wine_data_zs[:, j])
+                          )/np.std(wine_data_zs[:, j])
+
+
+compare_k_m_values(wine_data_zs, wine_class)
+compute_ztest(wine_data, 3, zscores=True)

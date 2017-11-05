@@ -8,12 +8,6 @@ import matplotlib.patches as mpatches
 
 np.random.seed(100)
 
-# Data Import
-iris, iris_meta = arff.loadarff("datasets/iris.arff")
-iris_data = np.array([iris['sepallength'], iris['sepalwidth'],
-                      iris['petallength'], iris['petalwidth']]).transpose()
-iris_class = iris['class'].reshape((150, 1))
-
 
 def compare_cluster_methods(data, labels_true, k_range=range(2, 11)):
 
@@ -58,6 +52,28 @@ def compare_cluster_methods(data, labels_true, k_range=range(2, 11)):
     plt.show()
 
 
-compare_cluster_methods(iris_data, iris_class)
+# # Data Import
+# iris, iris_meta = arff.loadarff("datasets/iris.arff")
+# iris_data = np.array([iris['sepallength'], iris['sepalwidth'],
+#                       iris['petallength'], iris['petalwidth']]).transpose()
+# iris_class = iris['class'].reshape((150, 1))
+#
+# compare_cluster_methods(iris_data, iris_class)
 
 
+# Wine Dataset
+wine, wine_meta = arff.loadarff("datasets/wine.arff")
+wine_data = np.array([wine['a1'], wine['a2'], wine['a3'], wine['a4'], wine['a5'],
+                     wine['a6'], wine['a7'], wine['a8'], wine['a9'], wine['a10'],
+                     wine['a11'], wine['a12'], wine['a13']]).transpose()
+wine_class = wine['class'].reshape((178, 1))
+
+wine_data_zs = wine_data.copy()
+
+# z-scores
+for j in range(wine_data.shape[1]):
+    wine_data_zs[:, j] = (wine_data_zs[:, j] - np.mean(wine_data_zs[:, j])
+                          )/np.std(wine_data_zs[:, j])
+
+
+compare_cluster_methods(wine_data_zs, wine_class)

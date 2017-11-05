@@ -38,7 +38,6 @@ def fcm(data, cluster_n, expo=2, max_iter=100, min_impro=1e-5, display=True,
 
 def stepfcm(data, U, cluster_n, expo):
     # One step in fuzzy c-mean clustering.
-    # [U_NEW, CENTER, ERR] = STEPFCM(DATA, U, CLUSTER_N, EXPO)
     # performs one iteration of fuzzy c-mean clustering, where
     #
     # DATA: matrix of data to be clustered. (Each row is a data point.)
@@ -47,10 +46,6 @@ def stepfcm(data, U, cluster_n, expo):
     # EXPO: exponent (> 1) for the partition matrix.
     # U_NEW: new partition matrix.
     # CENTER: center of clusters. (Each row is a center.)
-    #
-    # Note that the situation of "singularity" (one of the data points is
-    # exactly the same as one of the cluster centers) is not checked.
-    # However, it hardly occurs in practice.
 
     # MF matrix after exponential modification
     mf = np.power(U, expo)
@@ -95,7 +90,8 @@ def distfcm(center, data):
 
 def initfcm(cluster_n, data_n, initU=None):
     # Generate initial fuzzy partition matrix for fuzzy c-means clustering.
-    # The function randomly generates a fuzzy partition matrix U that is
+    # If initU is provided, the function uses initU as the U matrix, otherwise
+    # the function randomly generates a fuzzy partition matrix U that is
     # CLUSTER_N by DATA_N, where CLUSTER_N is number of clusters and
     # DATA_N is number of data points. The summation of each column of the
     # generated U is equal to unity, as required by fuzzy c-means clustering.
@@ -110,7 +106,3 @@ def initfcm(cluster_n, data_n, initU=None):
 
     U = U/U.sum(axis=0, keepdims=True)
     return U
-
-
-if __name__ == "__main__":
-    pass

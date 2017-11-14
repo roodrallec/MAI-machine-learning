@@ -139,6 +139,15 @@ for i in range(X.shape[1]):
     ]
     print sep.join([var_labels[i]] + ["%.2f" %s for s in stats])
 
+# Plot 2 original vars,  Magnesium vs Proline
+idx = [12, 4]
+plt.figure()
+plt.title("Scatter plot: {} vs {}".format(var_labels[idx[1]], var_labels[idx[0]]))
+plt.grid(linestyle='--', linewidth=0.5)
+plt.scatter(wine_data[:, idx[0]], wine_data[:, idx[1]], s=2)
+plt.xlabel(var_labels[idx[0]])
+plt.ylabel(var_labels[idx[1]])
+
 # Standardize the variables: x_std = (x - mean(x)) / sd(x)
 col_means = np.mean(X, axis=0)
 col_stdev = np.std(X, axis=0)

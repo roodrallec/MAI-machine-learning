@@ -163,8 +163,11 @@ plt.colorbar()
 X_cov = np.cov(X, rowvar=False)
 
 
-# Sorted Eigen Values and vectors
+# Compute eigenvalues and eigenvectors and sort them
 eig_values, eig_vectors = np.linalg.eig(X_cov)
+idx_sorted = np.argsort(-eig_values)
+eig_values = eig_values[idx_sorted]
+eig_vectors = eig_vectors[:, idx_sorted]
 
 # Plot Eigen values
 plot_eigen_values(eig_values)

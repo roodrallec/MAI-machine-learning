@@ -8,17 +8,17 @@ np.set_printoptions(linewidth=120)
 
 def plot_eigen_values(eig_values):
     fig, ax = plt.subplots()
-    fig.suptitle("Eigen values Plot")
+    fig.suptitle("Eigenvalues Plot")
     xvar = np.arange(1, eig_values.shape[0] + 1)
 
-    ax.bar(xvar, eig_values, label="Eigen values")
+    ax.bar(xvar, eig_values, label="Eigenvalues")
     ax.set_xlabel("Number of components")
-    ax.set_ylabel("Eigen value")
+    ax.set_ylabel("Eigenvalue")
 
     ax2 = plt.twinx()
     ax2.plot(xvar, np.cumsum(eig_values / np.sum(eig_values)), color='red',
              label='Accum. Variability')
-    ax2.set_ylim(0, 1)
+    ax2.set_ylim(0, 1.1)
     ax2.set_ylabel("% of variance explained")
 
     print "Explained variance ratio (comp, %) => {}".format(

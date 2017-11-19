@@ -24,7 +24,7 @@ def plot_eigen_values(eig_values):
     print "Explained variance ratio (comp, %) => {}".format(
         zip(xvar, (eig_values / np.sum(eig_values))))
 
-    fig.legend()
+    ax.legend()
     fig.show()
 
 
@@ -38,24 +38,36 @@ def plot_components(proj, evec, idx=[0, 1], var_labels=None, scale=True):
     if scale:
         proj = proj[:, idx]/np.ptp(proj[:, idx], axis=0)
 
-    plt.figure()
-    plt.title("PCA Biplot: individuals and variables")
-    plt.grid(linestyle='--', linewidth=0.5)
-    plt.axhline(0, color='darkgray')
-    plt.axvline(0, color='darkgray')
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 6))
+    fig.suptitle("PCA Biplot: individuals and variables")
 
-    plt.scatter(proj[:, idx[0]], proj[:, idx[1]], s=2)
-    plt.xlabel(proj_labels[0])
-    plt.ylabel(proj_labels[1])
-    # plt.xlim(-1, 1)
-    # plt.ylim(-1, 1)
+    ax1.grid(linestyle='--', linewidth=0.5)
+    ax1.axhline(0, color='darkgray')
+    ax1.axvline(0, color='darkgray')
+    ax1.scatter(proj[:, idx[0]], proj[:, idx[1]], s=2)
+    ax1.set_xlabel(proj_labels[0])
+    ax1.set_ylabel(proj_labels[1])
+    ax1.axis('equal')
+
+    ax2.grid(linestyle='--', linewidth=0.5)
+    ax2.axhline(0, color='darkgray')
+    ax2.axvline(0, color='darkgray')
+    ax2.axis('equal')
+    ax2.set_xlim(-1, 1)
+    ax2.set_ylim(-1, 1)
+    ax2.set_xlabel(proj_labels[0])
+    ax2.set_ylabel(proj_labels[1])
+
+
+    circle1 = plt.Circle((0, 0), 1, linewidth=1, fill=False)
+    ax2.add_artist(circle1)
 
     for j, label in enumerate(var_labels):
-        plt.arrow(0, 0, evec[j, idx[0]], evec[j, idx[1]], color='r', alpha=0.5)
-        plt.text(evec[j, idx[0]] * 1.1, evec[j, idx[1]] * 1.1, label,
+        ax2.arrow(0, 0, evec[j, idx[0]], evec[j, idx[1]], color='r', alpha=0.5)
+        ax2.text(evec[j, idx[0]] * 1.1, evec[j, idx[1]] * 1.1, label,
                  color='r', ha='center', va='center')
 
-    plt.show()
+    fig.show()
 
 ###
 
@@ -160,7 +172,7 @@ plt.title("Correlation Matrix")
 plt.colorbar()
 
 # Var and Covar matrix
-X_cov = np.cov(X, rowvar=False)
+X_cov = np.cov(X_centered, rowvar=False)
 
 
 # Compute eigenvalues and eigenvectors and sort them
@@ -176,5 +188,8 @@ plot_eigen_values(eig_values)
 X_proj = np.dot(X_centered, eig_vectors)
 
 # Plot projections of individuals and variables
-plot_components(X_proj, eig_vectors, var_labels=var_labels, scale=False)
+plot_components(X_proj, eig_vectors, idx=[0, 1], var_labels=var_labels, scale=False)
+plot_components(X_proj, eig_vectors, idx=[0, 2], var_labels=var_labels, scale=False)
+plot_components(X_proj, eig_vectors, idx=[1, 2], var_labels=var_labels, scale=False)
 
+x = 2

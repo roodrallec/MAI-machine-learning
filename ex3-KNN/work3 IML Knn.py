@@ -5,7 +5,9 @@ from numpy import linalg as LA
 
 np.set_printoptions(linewidth=120)
 
+"""1. Improve the parser developed in previous works in order to use the class attribute, too.
 
+"""
 ## READING FILES
 def read_dataset(fileroute):
     global x_class, x_class_names
@@ -69,10 +71,18 @@ dataset_name='credit-a'
 
 #S-FOLD LOOP
 
+"""
+1 [cont] Now, you need to read and save the information from a training and their corresponding testing file in a
+TrainMatrix and a TestMatrix, respectively. Recall that you need to normalize all the numerical attributes
+ in the range [0..1].
+2 Write a Python function that automatically repeats the process described in previous step for the
+10-fold cross-validation files. That is, read automatically each training case and run each one of the test cases in
+the selected classifier.
+"""
 for i in range(0,10):
     #loading training data
 
-    x, x_labels, x_class, x_class_names = read_dataset('datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000'+str(i)+'.train.arff')
+    TrainMatrix, x_labels, x_class, x_class_names = read_dataset('datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000'+str(i)+'.train.arff')
 
     #RUN ALGORITHM
 
@@ -80,7 +90,7 @@ for i in range(0,10):
 
     #loading test data
 
-    x, x_labels, x_class, x_class_names = read_dataset(
+    TestMatrix, x_labels, x_class, x_class_names = read_dataset(
         'datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(i) + '.test.arff')
 
 

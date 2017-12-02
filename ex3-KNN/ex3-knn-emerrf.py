@@ -52,8 +52,6 @@ hepa_test_y = hepa_mat[11:13, 19]
 class kNNAlgorithm(object):
     def __init__(self, k, metric="euclidean", policy="nearest"):
         self.k = k
-        self.policy = policy
-
         self._select_metric_function(metric)
         self._select_policy_function(policy)
 
@@ -74,7 +72,7 @@ class kNNAlgorithm(object):
         "euclidean"
         """
         if metric == "hamming":
-            pass
+            self.metric_fun = self._metric_hamming
         elif metric == "cosine":
             pass
         elif metric == "other":
@@ -136,6 +134,21 @@ class kNNAlgorithm(object):
 
         return dist_mat
 
+    def _metric_hamming(self, X, X_samples):
+        """
+        Implements Hamming distance metric as the average of a boolean vector
+        resulted from comparing two vectors element wise. Reference:
+        https://github.com/scipy/scipy/blob/v0.19.1/scipy/spatial/distance.py#L547
+        :param X: Matrix (N_train x M) (Individuals x Features)
+        :param X_samples: Matrix (N_samples x M) (Individuals x Features)
+        :return: Matrix of Hamming distances (N_samples x N_train)
+        """
+        dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
+        for j in np.arange(X_samples.shape[0]):
+            dist_mat[j, :] = np.mean(X != X_samples[j, :], axis=1)
+
+        return dist_mat
+
     def fit(self, train_X, train_y):
         """
         Stores the training values for future predictions
@@ -165,7 +178,7 @@ class kNNAlgorithm(object):
 
 
 # Run Algorithm for a tiny hepa
-knn = kNNAlgorithm(3)
+knn = kNNAlgorithm(3, metric="hamming")
 knn.fit(hepa_train_X, hepa_train_y)
 our_pred, our_dist, our_idx = knn.predict(hepa_test_X)
 

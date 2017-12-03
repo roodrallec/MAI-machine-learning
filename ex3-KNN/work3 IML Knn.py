@@ -8,6 +8,8 @@ np.set_printoptions(linewidth=120)
 """1. Improve the parser developed in previous works in order to use the class attribute, too.
 
 """
+
+
 ## READING FILES
 def read_dataset(fileroute):
     global x_class, x_class_names
@@ -25,7 +27,7 @@ def read_dataset(fileroute):
 
             nominal_values, numeric_eq = np.unique(x[label], return_inverse=True)
 
-            if 'Class' not in label and 'class' not in label:
+            if 'Class' not in label and 'class' not in label and 'a17' not in label:
                 x_allnumeric[:, i] = numeric_eq
                 i += 1
             else:
@@ -36,7 +38,7 @@ def read_dataset(fileroute):
             x_allnumeric[:, i] = x[label]
             i += 1
 
-    #input varaibles in rows, features in columns (x1 .... xn)
+    # input varaibles in rows, features in columns (x1 .... xn)
     return x_allnumeric, x_labels, x_class, x_class_names
 
 
@@ -64,12 +66,19 @@ def unnormalizeMeanSTD(norm_x, std_array, means_array):
 
 #####################################################################################################################
 
-#SETTING THE DATASET
-
-dataset_name='credit-a'
+def knn(x_train,x_train_labels,x_test,k_neiggbours='1',k_weights='1',method='vote', dist_meas='euclidian'):
 
 
-#S-FOLD LOOP
+
+    return x_test_labels
+
+#####################################################################################################################
+
+# SETTING THE DATASET
+
+dataset_name = 'hepatitis'
+
+# S-FOLD LOOP
 
 """
 1 [cont] Now, you need to read and save the information from a training and their corresponding testing file in a
@@ -79,19 +88,25 @@ TrainMatrix and a TestMatrix, respectively. Recall that you need to normalize al
 10-fold cross-validation files. That is, read automatically each training case and run each one of the test cases in
 the selected classifier.
 """
-for i in range(0,10):
-    #loading training data
+for i in range(0, 10):
+    # loading training data
 
-    TrainMatrix, x_labels, x_class, x_class_names = read_dataset('datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000'+str(i)+'.train.arff')
+    TrainMatrix, x_labels, x_class, x_class_names = read_dataset(
+        'datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(i) + '.train.arff')
 
-    #RUN ALGORITHM
+    TrainMatrix, mean, std = normalizeMeanSTD(TrainMatrix)
+    TrainMatrix, min, max = normalizeMinMax(TrainMatrix)
 
-    #CALCULATE & SAVE ACCURACY FOR THIS FOLD
 
-    #loading test data
+    # loading test data
 
     TestMatrix, x_labels, x_class, x_class_names = read_dataset(
         'datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(i) + '.test.arff')
 
+    # RUN ALGORITHM
+
+
+    # CALCULATE & SAVE ACCURACY FOR THIS FOLD
 
 print('done')
+

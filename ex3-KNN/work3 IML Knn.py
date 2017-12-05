@@ -66,6 +66,11 @@ def read_dataset(fileroute, classfield='class', emptyNomField='?' ):
 def normalizeMinMax(x):
     minVal = np.min(x, axis=0)
     maxVal = np.max(x, axis=0)
+    idx_zeros = np.where((minVal - maxVal) == 0)[0]
+    minVal[idx_zeros]=0
+    idx_zeros_maxV=[idxz for idxz in idx_zeros if maxVal[idxz] == 0]
+    maxVal[ idx_zeros_maxV ] = 1
+
     norm_x = (x - minVal) / (maxVal - minVal)
     return norm_x, minVal, maxVal
 
@@ -77,12 +82,15 @@ def unnormalizeMinMax(norm_x, minVal, maxVal):
 def normalizeMeanSTD(x):
     means_array = np.mean(x, axis=0)
     std_array = np.std(x, axis=0)
+    idx_zeros = np.where(std_array == 0)[ 0 ]
+    std_array[ idx_zeros ] = 1
     norm_x = (x - means_array) / std_array
     return norm_x, means_array, std_array
 
 
 def unnormalizeMeanSTD(norm_x, std_array, means_array):
     return means_array + np.dot(norm_x, std_array)
+
 
 
 #####################################################################################################################

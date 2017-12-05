@@ -17,7 +17,7 @@ np.set_printoptions(linewidth=120)
 
 
 ## READING FILES
-def read_dataset(fileroute):
+def read_dataset(fileroute, classfield='class', emptyNomField='?' ):
     global x_class, x_class_names
     x, x_meta = arff.loadarff(fileroute)
 
@@ -31,7 +31,7 @@ def read_dataset(fileroute):
 
         if 'nominal' in x_meta[ label ][ 0 ]:
 
-            if '?' in x[ label ]:
+            if emptyNomField not in x[ label ]:
                 c = Counter([ t for t in x[ label ] ])
                 most_c = c.most_common(1)[ 0 ][ 0 ]
                 if most_c in '?':
@@ -41,7 +41,8 @@ def read_dataset(fileroute):
 
             nominal_values, numeric_eq = np.unique(x[ label ], return_inverse=True)
 
-            if 'Class' not in label and 'class' not in label and 'a17' not in label:
+            #if 'Class' not in label and 'class' not in label and 'a17' not in label:
+            if classfield not in label:
                 x_allnumeric[ :, i ] = numeric_eq
                 i += 1
             else:
@@ -130,7 +131,7 @@ def kNNAlgorithm(x_train, x_train_class, x_test, k_neiggbours=1, method='', dist
 
         ## if there is an exact match, we assign the class of such match
 
-        if 0 in distances:
+        if 0: #in distances:
 
             selected_neighbours = np.where(distances == 0)[ 0 ]
             selected_neighbours_class=x_train_class[selected_neighbours]
@@ -171,6 +172,12 @@ def kNNAlgorithm(x_train, x_train_class, x_test, k_neiggbours=1, method='', dist
 # SETTING THE DATASET
 
 dataset_name = 'hepatitis' #pen-based
+emptyNominalField='?'
+classField='Class'
+
+dataset_name = 'pen-based' #pen-based
+emptyNominalField=''
+classField='a17'
 
 # S-FOLD LOOP
 
@@ -201,7 +208,7 @@ for dist in ['euclidean','cosine', 'hamming', 'minkowski', 'correlation']: #in [
             # loading training data
 
             TrainMatrix, train_x_labels, train_x_class, x_class_names = read_dataset(
-                'datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(f) + '.train.arff')
+                'datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(f) + '.train.arff', classField, emptyNominalField )
 
             #TrainMatrix, mean_train, std_train = normalizeMeanSTD(TrainMatrix)
             #TrainMatrix, min_train, max_train = normalizeMinMax(TrainMatrix)
@@ -209,7 +216,7 @@ for dist in ['euclidean','cosine', 'hamming', 'minkowski', 'correlation']: #in [
             # loading test data
 
             TestMatrix, test_x_labels, test_x_class, x_class_names = read_dataset(
-                'datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(f) + '.test.arff')
+                'datasetsCBR/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(f) + '.test.arff', classField, emptyNominalField)
 
             #TestMatrix, mean_train, std_train = normalizeMeanSTD(TestMatrix)
             #TestMatrix, min_test, max_test = normalizeMinMax(TestMatrix)
@@ -270,3 +277,4 @@ print('{4}   {0:.3f}  {1:.3f}   {2:.3f}   {3:.3f}'.format(results_distance[4][1]
 
 print('\n\ndone')
 
+#NEED TO record processing time

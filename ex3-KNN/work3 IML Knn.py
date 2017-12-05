@@ -8,6 +8,8 @@ import scipy as sp
 import sklearn
 from sklearn import metrics as skmetrics
 from sklearn.neighbors import KNeighborsClassifier
+from datetime import datetime
+
 
 np.set_printoptions(linewidth=120)
 
@@ -222,7 +224,10 @@ for dist in ['euclidean','cosine', 'hamming', 'minkowski', 'correlation']: #in [
             #TestMatrix, min_test, max_test = normalizeMinMax(TestMatrix)
 
             # RUN ALGORITHM
+            t1 = datetime.now()
             prediction, k_neighbours, k_neighbours_class,_,_ = kNNAlgorithm(TrainMatrix, train_x_class, TestMatrix, k_neig, method=sel_method, dist_meas=dist)
+            t2 = datetime.now()
+            delta = t2 - t1
 
 
 
@@ -239,23 +244,23 @@ for dist in ['euclidean','cosine', 'hamming', 'minkowski', 'correlation']: #in [
             knn_correct_classified_samples = skmetrics.accuracy_score(test_x_class, prediction, normalize=False)
             knn_incorrect_classified_samples = TestMatrix.shape[0]-knn_correct_classified_samples
 
-
-
-
+            t3 = datetime.now()
             neigh = KNeighborsClassifier(n_neighbors=k_neig, metric=dist, p=4)
 
 
             neigh.fit(TrainMatrix, train_x_class)
 
             prediction_sk=neigh.predict(TestMatrix)
+            t4 = datetime.now()
+            delta2 = t4 - t3
             sk_knn_accuracy = skmetrics.accuracy_score(test_x_class, prediction_sk)
 
             fold_results[ f ] = [ knn_accuracy, knn_correct_classified_samples, knn_incorrect_classified_samples, sk_knn_accuracy ]
 
             if f==0:
                 print ("Fold accuracy result comparison for k={0}, distance = {1} and method = {2}".format(k_neig, dist, sel_method))
-                print('Prediction KNN IML   -   Prediction SKLearn   -- VECTOR KNN IML  // VECTOR KNN SKLEARN  //  TRUTH')
-            print('{0:.3f}          {1:.3f}       {2}  //  {3}   //  {4}'.format(knn_accuracy,sk_knn_accuracy, prediction, prediction_sk, test_x_class))
+                print('Prediction KNN IML   -   Prediction SKLearn   -- timeKNNIML -- timeSKlearn -- VECTOR KNN IML  // VECTOR KNN SKLEARN  //  TRUTH')
+            print('{0:.3f}          {1:.3f}       {5:.3f}   {6:.3f}     {2}  //  {3}   //  {4}'.format(knn_accuracy,sk_knn_accuracy, prediction, prediction_sk, test_x_class, delta.total_seconds(),delta2.total_seconds()))
 
         knn_avg_accuracy=np.mean(fold_results[:, 0])
         print('Average accuracy kNNAlgorithm {0:.3f}  SKlearn Knn {1:.3f} '.format(knn_avg_accuracy,np.mean(fold_results[:, 3]) ))

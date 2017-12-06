@@ -10,6 +10,7 @@ import sklearn
 from sklearn import metrics as skmetrics
 from sklearn.neighbors import KNeighborsClassifier
 from datetime import datetime
+import sys
 
 
 np.set_printoptions(linewidth=120)
@@ -68,9 +69,9 @@ Justify your implementation and add all the references you have considered for y
 
 
 class kNNAlgorithm(object):
-    def __init__(self, k, metric="euclidean", q=4, policy="voting"):
+    def __init__(self, k, metric="euclidean", p=4, policy="voting"):
         self.k = k
-        self._select_metric_function(metric,q)
+        self._select_metric_function(metric,p)
         self._select_policy_function(policy)
 
     def _select_policy_function(self, policy):
@@ -180,8 +181,13 @@ class kNNAlgorithm(object):
         """
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
-            diff = X - X_samples[j,:]
-            dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
+            #diff = X - X_samples[j,:]
+            product=np.dot(X,X_samples[j, :].transpose())
+            modul1=np.nansum(np.power(X, 2), axis=1)
+            modul2=np.nansum(np.power(X_samples[j, :], 2))
+            suma1=(modul1 + modul2)
+            div=product/suma1
+            dist_vec = 1-product/(modul1 + modul2)
             dist_mat[j,:] = dist_vec
 
         return dist_mat
@@ -193,13 +199,14 @@ class kNNAlgorithm(object):
         X_samples row. Assuming numeric values.
         :param X: Matrix (N_train x M) (Individuals x Features)
         :param X_samples: Matrix (N_samples x M) (Individuals x Features)
-        :param q distance exponent
+        :param p distance exponent
         :return: Matrix of minkowski distances (N_samples x N_train)
         """
+        p=1
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
             diff = X - X_samples[j,:]
-            dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
+            dist_vec = np.power(np.nansum(np.power(diff, p), axis=1),1./p)
             dist_mat[j,:] = dist_vec
 
         return dist_mat
@@ -213,11 +220,13 @@ class kNNAlgorithm(object):
         :param X_samples: Matrix (N_samples x M) (Individuals x Features)
         :return: Matrix of euclidean distances (N_samples x N_train)
         """
+
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
-            diff = X - X_samples[j,:]
-            dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
-            dist_mat[j,:] = dist_vec
+                dist_mat[ j, : ]=[sp.spatial.distance.correlation(x, X_samples[j,:]) for x in X]
+        #     diff = X - X_samples[j,:]
+        #     dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
+        #     dist_mat[j,:] = dist_vec
 
         return dist_mat
 
@@ -320,15 +329,10 @@ def read_dataset(fileroute, classfield='class', emptyNomField='?' ):
 def normalizeMinMax(x):
     minVal = np.min(x, axis=0)
     maxVal = np.max(x, axis=0)
-
     idx_zeros = np.where((minVal - maxVal) == 0)[0]
     minVal[idx_zeros]=0
-
-
-
     idx_zeros_maxV=[idxz for idxz in idx_zeros if maxVal[idxz] == 0]
     maxVal[ idx_zeros_maxV ] = 1
-
     norm_x = (x - minVal) / (maxVal - minVal)
     return norm_x, minVal, maxVal
 
@@ -358,7 +362,7 @@ def unnormalizeMeanSTD(norm_x, std_array, means_array):
 dataset_name = 'hepatitis' #pen-based
 emptyNominalField='?'
 classField='Class'
-
+#
 dataset_name = 'pen-based' #pen-based
 emptyNominalField=''
 classField='a17'
@@ -375,6 +379,12 @@ the selected classifier.
 """
 sel_method='vote'
 results_distance=[]
+
+orig_stdout = sys.stdout
+out_file = open('out_pen_based.txt', 'w')
+sys.stdout = out_file
+
+# Python 3.x
 
 print('STARTTING')
 
@@ -394,20 +404,20 @@ for dist in ['euclidean','cosine', 'hamming', 'minkowski', 'correlation']: #in [
             TrainMatrix, train_x_labels, train_x_class, x_class_names = read_dataset(
                 'datasets/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(f) + '.train.arff', classField, emptyNominalField )
 
-            TrainMatrix, mean_train, std_train = normalizeMeanSTD(TrainMatrix)
-            #TrainMatrix, min_train, max_train = normalizeMinMax(TrainMatrix)
+            #TrainMatrix, mean_train, std_train = normalizeMeanSTD(TrainMatrix)
+            TrainMatrix, min_train, max_train = normalizeMinMax(TrainMatrix)
 
             # loading test data
 
             TestMatrix, test_x_labels, test_x_class, x_class_names = read_dataset(
                 'datasets/' + dataset_name + '/' + dataset_name + '.fold.00000' + str(f) + '.test.arff', classField, emptyNominalField)
 
-            TestMatrix, mean_train, std_train = normalizeMeanSTD(TestMatrix)
-            #TestMatrix, min_test, max_test = normalizeMinMax(TestMatrix)
+            #TestMatrix, mean_train, std_train = normalizeMeanSTD(TestMatrix)
+            TestMatrix, min_test, max_test = normalizeMinMax(TestMatrix)
 
             # RUN ALGORITHM
             t1 = datetime.now()
-            #prediction, k_neighbours, k_neighbours_class,_,_ = kNNAlgorithm(TrainMatrix, train_x_class, TestMatrix, k_neig, method=sel_method, dist_meas=dist)
+
             # Run Algorithm for a tiny hepa
             knn = kNNAlgorithm(k_neig, metric=dist)
             knn.fit(TrainMatrix, train_x_class)
@@ -467,4 +477,7 @@ print('{4}   {0:.3f}  {1:.3f}   {2:.3f}   {3:.3f}'.format(results_distance[3][1]
 print('{4}   {0:.3f}  {1:.3f}   {2:.3f}   {3:.3f}'.format(results_distance[4][1][0][1],results_distance[4][1][1][1],results_distance[4][1][2][1],results_distance[4][1][3][1], results_distance[4][0]))
 
 print('\n\ndone')
+
+sys.stdout = orig_stdout
+out_file.close()
 

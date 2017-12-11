@@ -69,10 +69,13 @@ Justify your implementation and add all the references you have considered for y
 
 
 class kNNAlgorithm(object):
-    def __init__(self, k, metric="euclidean", p=4, policy="voting"):
+    def __init__(self, k, metric="euclidean", p=4, policy="voting", weights=None, selection=None):
         self.k = k
         self._select_metric_function(metric,p)
         self._select_policy_function(policy)
+        self.weights=weights
+        self.selection = selection
+        self.p=p
 
     def _select_policy_function(self, policy):
         """
@@ -149,7 +152,10 @@ class kNNAlgorithm(object):
         """
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
-            diff = X - X_samples[j,:]
+            if self.weights is None:
+                diff = X - X_samples[j,:]
+            else:
+                diff = X*self.weights - X_samples[ j, : ]*self.weights
             dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
             dist_mat[j,:] = dist_vec
 
@@ -166,7 +172,10 @@ class kNNAlgorithm(object):
         """
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
-            dist_mat[j, :] = np.mean(X != X_samples[j, :], axis=1)
+            if self.weights is None:
+                dist_mat[ j, : ] = np.mean(X != X_samples[ j, : ], axis=1)
+            else:
+                dist_mat[ j, : ] = np.mean((X*self.weights) != (X_samples[ j, : ]*self.weights), axis=1)
 
         return dist_mat
 
@@ -181,10 +190,16 @@ class kNNAlgorithm(object):
         """
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
-            #diff = X - X_samples[j,:]
-            product=np.dot(X,X_samples[j, :].transpose())
-            modul1=np.nansum(np.power(X, 2), axis=1)
-            modul2=np.nansum(np.power(X_samples[j, :], 2))
+            if self.weights is None:
+                Xw=X
+                X_samples_w=X_samples[j, :]
+            else:
+                Xw = X*self.weights
+                X_samples_w = X_samples[ j, : ]*self.weights
+
+            product=np.dot(Xw, X_samples_w.transpose())
+            modul1=np.nansum(np.power(Xw, 2), axis=1)
+            modul2=np.nansum(np.power(X_samples_w, 2))
             suma1=(modul1 + modul2)
             div=product/suma1
             dist_vec = 1-product/(modul1 + modul2)
@@ -202,10 +217,13 @@ class kNNAlgorithm(object):
         :param p distance exponent
         :return: Matrix of minkowski distances (N_samples x N_train)
         """
-        p=1
+        p=self.p
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
-            diff = X - X_samples[j,:]
+            if self.weights is None:
+                diff = X - X_samples[j,:]
+            else:
+                diff = X*self.weights - X_samples[ j, : ]*self.weights
             dist_vec = np.power(np.nansum(np.power(diff, p), axis=1),1./p)
             dist_mat[j,:] = dist_vec
 
@@ -223,7 +241,13 @@ class kNNAlgorithm(object):
 
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))
         for j in np.arange(X_samples.shape[0]):
-                dist_mat[ j, : ]=[sp.spatial.distance.correlation(x, X_samples[j,:]) for x in X]
+                if self.weights is None:
+                    Xw = X
+                    X_samples_w = X_samples[ j, : ]
+                else:
+                    Xw = X * self.weights
+                    X_samples_w = X_samples[ j, : ] * self.weights
+                dist_mat[ j, : ]=[sp.spatial.distance.correlation(x, X_samples_w) for x in Xw]
         #     diff = X - X_samples[j,:]
         #     dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
         #     dist_mat[j,:] = dist_vec
@@ -273,7 +297,18 @@ class kNNAlgorithm(object):
 # print our_dist == dist
 # print our_idx == idx
 
+####T-tes
 
+def tTest(f1,f2):
+
+    u1 = np.mean(f1)
+    u2 = np.mean(f2)
+    s1 = np.var(f1)
+    s2 = np.var(f2)
+
+    denom= np.sqrt(np.power(f1, 2)/f1.shape[0] + np.power(f1, 2)/f1.shape[0] )
+
+    return ((u1-u2)/denom)
 
 
 """1. Improve the parser developed in previous works in order to use the class attribute, too.
@@ -283,6 +318,22 @@ class kNNAlgorithm(object):
 
 ## READING FILES
 def read_dataset(fileroute, classfield='class', emptyNomField='?' ):
+    """ Loads dataset information from file, computes values for missing features, creates an all numeric matrix with all the instances features.
+    Creates a array containing the features names
+    Creates a array containing the class names
+    Creates a array containing the class values.
+
+    parameters:
+    fileroute: path to dataset file
+    classfield: name of the field containing the class value
+    emptyNomField: characters used in empty (missing information) in nominal features
+
+    returns:
+    x_allnumeric: n (number of instances) x m (number of features) numpy matrix
+    x_labels: 1x m array containing features labels
+    x_class: 1 x n array containing class assignment for each instance
+    x_class_names: 1 x c (number of different classes) array containing the names of the classes
+    """
     global x_class, x_class_names
     x, x_meta = arff.loadarff(fileroute)
 
@@ -363,9 +414,9 @@ dataset_name = 'hepatitis' #pen-based
 emptyNominalField='?'
 classField='Class'
 #
-dataset_name = 'pen-based' #pen-based
-emptyNominalField=''
-classField='a17'
+#dataset_name = 'pen-based' #pen-based
+#emptyNominalField=''
+#classField='a17'
 
 # S-FOLD LOOP
 
@@ -381,8 +432,8 @@ sel_method='vote'
 results_distance=[]
 
 orig_stdout = sys.stdout
-out_file = open('out_pen_based.txt', 'w')
-sys.stdout = out_file
+out_file = open('out_weighted_no_weight.txt', 'w')
+#sys.stdout = out_file
 
 # Python 3.x
 
@@ -419,7 +470,7 @@ for dist in ['euclidean','cosine', 'hamming', 'minkowski', 'correlation']: #in [
             t1 = datetime.now()
 
             # Run Algorithm for a tiny hepa
-            knn = kNNAlgorithm(k_neig, metric=dist)
+            knn = kNNAlgorithm(k_neig, metric=dist, p=4)
             knn.fit(TrainMatrix, train_x_class)
             prediction, our_dist, our_idx = knn.predict(TestMatrix)
             t2 = datetime.now()
@@ -441,7 +492,7 @@ for dist in ['euclidean','cosine', 'hamming', 'minkowski', 'correlation']: #in [
             knn_incorrect_classified_samples = TestMatrix.shape[0]-knn_correct_classified_samples
 
             t3 = datetime.now()
-            neigh = KNeighborsClassifier(n_neighbors=k_neig, metric=dist, p=4)
+            neigh = KNeighborsClassifier(n_neighbors=k_neig, metric=dist)
 
 
             neigh.fit(TrainMatrix, train_x_class)

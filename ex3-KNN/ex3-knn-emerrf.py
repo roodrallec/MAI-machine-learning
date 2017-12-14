@@ -1,16 +1,14 @@
 # coding=utf-8
-from sklearn import neighbors, datasets
+import sys
 import numpy as np
+import scipy as sp
+import matplotlib.pyplot as plt
+from sklearn import datasets, metrics as skmetrics
+from sklearn.neighbors import KNeighborsClassifier
 from scipy.io import arff
 from collections import Counter
-import matplotlib.pyplot as plt
-from numpy import linalg as LA
-import scipy as sp
-import sklearn
-from sklearn import metrics as skmetrics
-from sklearn.neighbors import KNeighborsClassifier
 from datetime import datetime
-import sys
+
 
 
 np.set_printoptions(linewidth=120)

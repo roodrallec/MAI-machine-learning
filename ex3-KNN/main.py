@@ -54,7 +54,8 @@ for dataset in data_sets:
             print(dist)
             for k in [1, 3, 5, 7]:
                 print(k)
-                y_pred, delta = run_knn(kNNAlgorithm(k, metric=dist, p=4), X_train, y_train, X_test)
+                algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=None, selection=None)
+                y_pred, delta = run_knn(algo, X_train, y_train, X_test)
                 c_matrix = confusion_matrix(y_test, y_pred)
                 tn, fp, fn, tp = c_matrix.ravel()
                 results = results.append({

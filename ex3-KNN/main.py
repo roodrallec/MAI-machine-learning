@@ -18,7 +18,7 @@
 import pandas as pd
 from kNNAlgorithm import *
 from Parser import *
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
 from datetime import datetime
 
 
@@ -36,12 +36,12 @@ def run_knn(knnAlgorithm, X_train, y_train, X_test):
     delta = (t2 - t1).total_seconds()
     return prediction, delta
 
-# Hep Data-set
+
 data_sets = [
     {'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}
     # ,    {'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}
 ]
-results = pd.DataFrame(columns=['dataset', 'fold', 'dist_metric', 'k_value', 'accuracy', 'true_p_n', 'false_p_n'])
+results = pd.DataFrame(columns=['dataset', 'fold', 'dist_metric', 'k_value', 'tp', 'tn', 'fp', 'fn'])
 for dataset in data_sets:
     print(dataset)
     for f in range(0, 10):
@@ -55,15 +55,15 @@ for dataset in data_sets:
             for k in [1, 3, 5, 7]:
                 print(k)
                 y_pred, delta = run_knn(kNNAlgorithm(k, metric=dist, p=4), X_train, y_train, X_test)
-                knn_accuracy = accuracy_score(y_test, y_pred)
-                knn_correct = accuracy_score(y_test, y_pred, normalize=False)
-                knn_incorrect = X_test.shape[0] - knn_correct
+                c_matrix = confusion_matrix(y_test, y_pred)
+                tn, fp, fn, tp = c_matrix.ravel()
                 results = results.append({
                     'dataset': dataset['name'],
                     'fold': str(f),
                     'dist_metric': dist,
                     'k_value': str(k),
-                    'accuracy': str(knn_accuracy),
-                    'true_p_n': str(knn_correct),
-                    'false_p_n': str(knn_incorrect)
+                    'tp': str(tp),
+                    'tn': str(tn),
+                    'fp': str(fp),
+                    'fn': str(fn)
                 }, ignore_index=True)

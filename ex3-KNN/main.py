@@ -41,7 +41,7 @@ data_sets = [
     {'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}
     # ,    {'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}
 ]
-results = pd.DataFrame(columns=['dataset', 'fold', 'dist_metric', 'k_value', 'tp', 'tn', 'fp', 'fn'])
+results = pd.DataFrame(columns=['dataset', 'fold', 'dist_metric', 'k_value', 'run_time', 'tp', 'tn', 'fp', 'fn'])
 for dataset in data_sets:
     print(dataset)
     for f in range(0, 10):
@@ -63,6 +63,7 @@ for dataset in data_sets:
                     'fold': str(f),
                     'dist_metric': dist,
                     'k_value': str(k),
+                    'run_time': delta,
                     'tp': str(tp),
                     'tn': str(tn),
                     'fp': str(fp),

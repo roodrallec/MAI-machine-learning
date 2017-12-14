@@ -27,13 +27,9 @@ def read_dataset(fileroute, classfield='class', emptyNomField='?'):
     """
     global x_class, x_class_names
     x, x_meta = arff.loadarff(fileroute)
-
     x_labels = x_meta.names()
-
     x_allnumeric = np.empty([x.size, x_labels.__len__() - 1])
-
     i = 0
-
     for label in x_labels:
 
         if 'nominal' in x_meta[label][0]:
@@ -44,6 +40,7 @@ def read_dataset(fileroute, classfield='class', emptyNomField='?'):
 
                 if most_c in '?':
                     most_c = c.most_common(2)[1]
+
                 idx = np.where(x[label] == '?')[0]
                 x[label][idx] = most_c
 

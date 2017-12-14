@@ -13,6 +13,7 @@
     Keep in mind that you need to compute the average accuracy over the 10-fold cross-validation sets.
 """
 import sys
+import pandas as pd
 import numpy as np
 from kNNAlgorithm import *
 from Parser import *
@@ -37,56 +38,58 @@ def run_knn(knn, X_train, y_train, X_test):
     return prediction, delta
 
 
-def run_fold_knn(fold_path, class_field, empty_nominal_field):
+def run_fold_knn(fold_path, class_field, dummy_field):
     # Load and normalise training data and test data
-    X_train, y_train = load_and_normalise(fold_path + '.train.arff', class_field, empty_nominal_field)
-    X_test, x_labels = load_and_normalise(fold_path + '.test.arff', class_field, empty_nominal_field)
+    X_train, y_train = load_and_normalise(fold_path + '.train.arff', class_field, dummy_field)
+    X_test, x_labels = load_and_normalise(fold_path + '.test.arff', class_field, dummy_field)
     # Run the two implementations
     y, delta = run_knn(kNNAlgorithm(k, metric=dist, p=4), X_train, y_train, X_test)
     y_sk, delta_sk = run_knn(KNeighborsClassifier(n_neighbors=k, metric=dist), X_train, y_train, X_test)
     # Calculate the two accuracies
     knn_accuracy = accuracy_score(x_labels, y)
     sk_knn_accuracy = accuracy_score(x_labels, y_sk)
-    # correct and incorrect samplesZ
+    # correct and incorrect samples
     knn_correct = accuracy_score(x_labels, y, normalize=False)
     knn_incorrect = X_test.shape[0] - knn_correct
-    print('{0:.3f}\t{1:.3f}\t{5:.3f}\t{6:.3f}\t{2} // {3} // {4}'
-          .format(knn_accuracy, sk_knn_accuracy, y, y_sk, x_labels, delta, delta_sk))
-    return [knn_accuracy, knn_correct, knn_incorrect, sk_knn_accuracy]
+    return [knn_accuracy, knn_correct, knn_incorrect, sk_knn_accuracy], y, y_sk, x_labels, delta, delta_sk
+
 
 # Hep Data-set
-dataset_name = 'hepatitis'  # pen-based
-empty_nominal_field = '?'
-class_field = 'Class'
-
-# Pen-based Data-set
-# dataset_name = 'pen-based' #pen-based
-# emptyNominalField=''
-# classField='a17'
+data_sets = [{
+    "name" :  "hepatitis",
+    "dummy_value" : "?",
+    "class_field" : "Class"
+}, {
+    "name" :  "pen-based",
+    "dummy_value" : "",
+    "class_field" : "a17"
+}]
 
 # S-FOLD LOOP
 sel_method = 'vote'
 res_dist = []
 
 orig_stdout = sys.stdout
-out_file = open('out_weighted_no_weight.txt', 'w')
+# out_file = open('out_weighted_no_weight.txt', 'w')
 # sys.stdout = out_file
-
+dataset = data_sets[0]
 for dist in ['euclidean', 'cosine', 'hamming', 'minkowski', 'correlation']: # 'mahalanobis'
     results_k = []
     print(dist)
 
-    for k in [1, 3, 5, 7]: # k takes to long to calculate and the same every time so we call 7 and then iterate.
+    for k in [1, 3, 5, 7]:  # k takes to long to calculate and the same every time
         fold_results = np.empty([10, 4])
 
-        print ("Fold accuracy result comparison for k={0}, distance = {1} and method = {2}".format(k, dist,
-                                                                                                   sel_method))
-        print('Prediction KNN IML   -   Prediction SKLearn   -- timeKNNIML -- timeSKlearn -- VECTOR KNN IML // '
-              'VECTOR KNN SK-LEARN // TRUTH')
+        print ('Fold accuracy result comparison for k={0}, distance = {1} and method = {2}'.format(k, dist, sel_method))
+        print('KNN-IML-Predict\tSKLearn-Predict\tKNN-IML-Time\tSKLearn-Time\tKNN-IML-Vector\tSKLearn-Vector\tTRUTH')
 
         for f in range(0, 10):
-            fold_path = 'datasets/{0}/{0}.fold.00000{1}'.format(dataset_name, f)
-            fold_results[f] = run_fold_knn(fold_path, class_field, empty_nominal_field)
+            fold_path = 'datasets/{0}/{0}.fold.00000{1}'.format(dataset['name'], f)
+            results, y, y_sk, x_labels, delta, delta_sk = run_fold_knn(fold_path,
+                                                                       dataset['class_field'], dataset['dummy_value'])
+            print('{0:.3f}\t{1:.3f}\t{5:.3f}\t{6:.3f}\t{2}\t{3}\t{4}'.format(results[0], results[3], y, y_sk,
+                                                                             x_labels, delta, delta_sk))
+            fold_results[f] = results
 
         knn_avg_accuracy = np.mean(fold_results[:, 0])
         sklearn_mean = np.mean(fold_results[:, 3])
@@ -111,7 +114,6 @@ print('{4}\t{0:.3f}\t{1:.3f}\t{2:.3f}\t{3:.3f}'.format(res_dist[3][1][0][1], res
                                                        res_dist[3][1][3][1], res_dist[3][0]))
 print('{4}\t{0:.3f}\t{1:.3f}\t{2:.3f}\t{3:.3f}'.format(res_dist[4][1][0][1], res_dist[4][1][1][1], res_dist[4][1][2][1],
                                                        res_dist[4][1][3][1], res_dist[4][0]))
-print('\n\ndone')
 
 sys.stdout = orig_stdout
 out_file.close()

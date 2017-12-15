@@ -1,3 +1,4 @@
+# coding=utf-8
 """
     1. [cont] Now, you need to read and save the information from a training and their corresponding testing file in a
     TrainMatrix and a TestMatrix, respectively. Recall that you need to normalize all the numerical attributes
@@ -19,7 +20,7 @@ from scipy.stats import friedmanchisquare
 import pandas as pd
 from kNNAlgorithm import *
 from Parser import *
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
 from datetime import datetime
 
 
@@ -46,24 +47,41 @@ def run_knn(knnAlgorithm, X_train, y_train, X_test):
 
 
 data_sets = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
-# ,    {'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}
-results = pd.DataFrame(columns=['dataset', 'fold', 'dist_metric', 'k_value', 'run_time', 'tp', 'tn', 'fp', 'fn'])
+# ,{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
+results = pd.DataFrame(columns=['dataset', 'fold', 'dist_metric', 'k_value', 'run_time', 'c_matrix'])
+
 for dataset in data_sets:
-    print(dataset)
+
     for f in range(0, 10):
-        print(f)
         path = 'datasets/{0}/{0}.fold.00000{1}'.format(dataset['name'], f)
         X_train, y_train, X_test, y_test = norm_train_test_split(path, dataset['class_field'], dataset['dummy_value'])
 
         for dist in ['euclidean', 'cosine', 'hamming', 'minkowski', 'correlation']:
-            print(dist)
+
             for k in [1, 3, 5, 7]:
-                print(k)
                 algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=None, selection=None)
                 y_pred, delta = run_knn(algo, X_train, y_train, X_test)
                 c_matrix = confusion_matrix(y_test, y_pred)
-                tn, fp, fn, tp = c_matrix.ravel()
+                acc = accuracy_score(y_test, y_pred)
                 results = results.append({'dataset': dataset['name'], 'fold': f, 'dist_metric': dist, 'k_value': k,
-                                          'run_time': delta, 'tp': tp, 'tn': tn, 'fp': fp, 'fn': fn}, ignore_index=True)
+                                          'run_time': delta, 'c_matrix': c_matrix, 'accuracy': acc}, ignore_index=True)
+                print(dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix))
 
-# Friedman tests
+"""
+    FRIEDMAN TESTS
+    
+    The Friedman test (Friedman, 1937, 1940) is a non-parametric equivalent of the repeated-measures ANOVA. 
+    It ranks the algorithms for each data set separately, the best performing algorithm getting the rank of 1, 
+    the second best rank 2. . . . In case of ties (like in iris, lung cancer, mushroom and primary 
+    tumor), average ranks are assigned.
+"""
+perfA = results[(results['dataset'] == 'hepatitis') & (results['dist_metric'] == 'cosine') & (results['k_value'] == 3)]
+perfB = results[(results['dataset'] == 'hepatitis') & (results['dist_metric'] == 'cosine') & (results['k_value'] == 5)]
+perfC = results[(results['dataset'] == 'hepatitis') & (results['dist_metric'] == 'cosine') & (results['k_value'] == 7)]
+friedman_chi, p_value = friedmanchisquare(list(perfA['accuracy']), list(perfB['accuracy']), list(perfC['accuracy']))
+
+fold_average = results.groupby(['dataset', 'dist_metric', 'k_value']).agg({'accuracy': np.mean})
+print(fold_average)
+
+
+

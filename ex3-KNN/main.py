@@ -16,8 +16,9 @@
     You can store your results in a memory data structure or in a file.
     Keep in mind that you need to compute the average accuracy over the 10-fold cross-validation sets.
 """
-from scipy.stats import friedmanchisquare
 import pandas as pd
+from scipy.stats import friedmanchisquare
+from nemenyi import kw_nemenyi
 from kNNAlgorithm import *
 from Parser import *
 from sklearn.metrics import confusion_matrix, accuracy_score
@@ -77,7 +78,14 @@ for dataset in data_sets:
     the second best rank 2. . . . In case of ties (like in iris, lung cancer, mushroom and primary 
     tumor), average ranks are assigned.
 """
+alpha = 0.1
 sorted_results = results.sort_values(['dataset', 'dist_metric', 'k_value'], ascending=[1,1,1])
 grouped_accuracies = np.array_split(sorted_results['accuracy'], len(data_sets)*len(k_values)*len(dist_metrics))
 friedman_chi, p_value = friedmanchisquare(*grouped_accuracies)
 
+if (p_value > alpha):
+    print("Accept null hypothesis", "p=" + str(p_value), "alpha=" + str(alpha))
+else:
+    print("Rejecting null hypothesis")
+    H, p_omnibus, p_corrected, reject = kw_nemenyi(grouped_accuracies)
+    print("Nemenyi scores", H, p_omnibus)

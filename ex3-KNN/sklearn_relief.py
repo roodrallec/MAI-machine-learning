@@ -121,7 +121,7 @@ class Relief(BaseEstimator, TransformerMixin):
         for name, default_value, convf in (
                 # Param name, default param value, param conversion function
                 ('categorical', (), tuple),
-                ('n_jobs', cpu_count(), int),
+                ('n_jobs', 1, int),
                 ('n_iterations', 100, int),
                 ('n_features', 1, int),
                 ('random_state', None, gen_random_state)

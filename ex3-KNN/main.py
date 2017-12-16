@@ -101,10 +101,10 @@ for dataset in data_sets:
                     y_pred, delta = run_knn(algo, X_train, y_train, X_test)
                     c_matrix = confusion_matrix(y_test, y_pred)
                     acc = accuracy_score(y_test, y_pred)
-                    results = results.append({'algorithm': algo['name'], 'dataset': dataset['name'], 'fold': f,
+                    results = results.append({'algorithm': params['name'], 'dataset': dataset['name'], 'fold': f,
                                               'dist_metric': dist, 'k_value': k, 'run_time': delta,
                                               'c_matrix': c_matrix, 'accuracy': acc}, ignore_index=True)
-                    print(algo['name'], dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix), acc)
+                    print(params['name'], dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix), acc)
 
 """
     FRIEDMAN TESTS

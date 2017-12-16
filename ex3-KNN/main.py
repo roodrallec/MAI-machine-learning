@@ -24,6 +24,9 @@ from Parser import *
 from sklearn.metrics import confusion_matrix, accuracy_score
 from datetime import datetime
 
+from selectionKNNAlgorithm import selectionKNNAlgorithm
+from weightedKNNAlgorithm import weightedKNNAlgorithm
+
 
 def train_test_split(path, class_field, dummy_nominal):
     matrix, labels, class_, _ = read_dataset(path, class_field, dummy_nominal)
@@ -62,13 +65,15 @@ for dataset in data_sets:
         for dist in dist_metrics:
 
             for k in k_values:
-                algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=None, selection=None)
+                #algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=None, selection=None)
+                #algo = weightedKNNAlgorithm(X_train,y_train,k,dist,weight_method="info_gain")
+                algo = selectionKNNAlgorithm(X_train, y_train, k, dist, selection_method="info_gain", number_features=5)
                 y_pred, delta = run_knn(algo, X_train, y_train, X_test)
                 c_matrix = confusion_matrix(y_test, y_pred)
                 acc = accuracy_score(y_test, y_pred)
                 results = results.append({'dataset': dataset['name'], 'fold': f, 'dist_metric': dist, 'k_value': k,
                                           'run_time': delta, 'c_matrix': c_matrix, 'accuracy': acc}, ignore_index=True)
-                print(dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix))
+                print(dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix),acc)
 
 """
     FRIEDMAN TESTS
@@ -89,3 +94,5 @@ else:
     print("Rejecting null hypothesis")
     H, p_omnibus, p_corrected, reject = kw_nemenyi(grouped_accuracies)
     print("Nemenyi scores", H, p_omnibus)
+
+print(results.groupby(["k_value","dist_metric"]).mean())

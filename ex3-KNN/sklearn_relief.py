@@ -56,11 +56,10 @@ The following research papers have been used during development:
 """
 
 
-import os
 import sys
 from functools import reduce
 from collections import deque
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -122,7 +121,7 @@ class Relief(BaseEstimator, TransformerMixin):
         for name, default_value, convf in (
                 # Param name, default param value, param conversion function
                 ('categorical', (), tuple),
-                ('n_jobs', os.cpu_count(), int),
+                ('n_jobs', cpu_count(), int),
                 ('n_iterations', 100, int),
                 ('n_features', 1, int),
                 ('random_state', None, gen_random_state)

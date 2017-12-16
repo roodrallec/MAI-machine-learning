@@ -70,13 +70,12 @@ def knn_weights(X_train, y_train, sel_method='information_gain', num_features=0)
 algo_params = [{
     'name': "Weighted knn",
     'sel_method': 'relief',
-    'num_features': 3
+    'num_features': 0
+}, {
+    'name': "Selection knn",
+    'sel_method': 'information_gain',
+    'num_features': 0
 }]
-# , {
-#     'name': "Selection knn",
-#     'sel_method': 'information_gain',
-#     'num_features': 3
-# }]
 
 data_sets = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
 # ,{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
@@ -91,20 +90,20 @@ for dataset in data_sets:
         path = 'datasets/{0}/{0}.fold.00000{1}'.format(dataset['name'], f)
         X_train, y_train, X_test, y_test = norm_train_test_split(path, dataset['class_field'], dataset['dummy_value'])
 
-        for dist in dist_metrics:
+        for params in algo_params:
+            weights = knn_weights(X_train, y_train, params['sel_method'], params['num_features'])
 
-            for k in k_values:
+            for dist in dist_metrics:
 
-                for params in algo_params:
-                    weights = knn_weights(X_train, y_train, params['sel_method'], params['num_features'])
-                    algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights)
-                    y_pred, delta = run_knn(algo, X_train, y_train, X_test)
-                    c_matrix = confusion_matrix(y_test, y_pred)
-                    acc = accuracy_score(y_test, y_pred)
+                for k in k_values:
+                    y_pred, delta = run_knn(kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights),
+                                            X_train, y_train, X_test)
+                    # Confusion matrix and accuracy
+                    c_matrix, accuracy = confusion_matrix(y_test, y_pred), accuracy_score(y_test, y_pred)
                     results = results.append({'algorithm': params['name'], 'dataset': dataset['name'], 'fold': f,
                                               'dist_metric': dist, 'k_value': k, 'run_time': delta,
-                                              'c_matrix': c_matrix, 'accuracy': acc}, ignore_index=True)
-                    print(params['name'], dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix), acc)
+                                              'c_matrix': c_matrix, 'accuracy': accuracy}, ignore_index=True)
+                    print(params['name'], dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix), accuracy)
 
 """
     FRIEDMAN TESTS

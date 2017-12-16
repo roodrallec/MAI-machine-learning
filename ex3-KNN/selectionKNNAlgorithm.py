@@ -17,6 +17,6 @@ def selectionKNNAlgorithm(X_train, y_train, k, dist, selection_method=None, numb
 
     #print (weights)
 
-    algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights, selection=None)
+    algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights)
 
     return algo

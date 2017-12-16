@@ -10,7 +10,7 @@ def weightedKNNAlgorithm(X_train,y_train,k, dist,weight_method=None) :
 
     #print (weights)
 
-    algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights, selection=None)
+    algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights)
 
 
     return algo

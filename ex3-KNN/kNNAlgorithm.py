@@ -12,12 +12,11 @@ np.random.seed(0)
 
 
 class kNNAlgorithm(object):
-    def __init__(self, k, metric="euclidean", p=4, policy="voting", weights=None, selection=None):
+    def __init__(self, k, metric="euclidean", p=4, policy="voting", weights=None):
         self.k = k
         self._select_metric_function(metric, p)
         self._select_policy_function(policy)
         self.weights = weights
-        self.selection = selection
         self.p = p
 
     def _select_policy_function(self, policy):

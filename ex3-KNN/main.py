@@ -219,3 +219,28 @@ hepa_algo_params = [{
 
 hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params, friedman=False)
 w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
+
+
+## Pen-based Part I
+penb_res_part1 = main_run(penb_data_set, algo_params=no_feature_algo)
+penb_res_part1.to_pickle("penb_res_part1.df")
+penb_res_part1_l = pd.read_pickle("penb_res_part1.df")
+assert penb_res_part1 == penb_res_part1_l
+exit(0)
+w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
+
+# We select Eucleadian with K = 7 (Highest Median with lowest IQR (interquartile range))
+# Hepatitis Part II
+penb_algo_params = [{
+    'name': "Weighted knn",
+    'sel_method': 'relief',
+    'num_features': [0]
+}, {
+    'name': "Selection knn",
+    'sel_method': 'information_gain',
+    'num_features': range(1, 19)
+}]
+
+hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params, friedman=False)
+w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
+

@@ -71,62 +71,151 @@ def knn_weights(X_train, y_train, sel_method='information_gain', num_features=0)
     return weights
 
 
-algo_params = [{
+def w3plot(results, part=1, engine="seaborn", filename=None):
+    import matplotlib.pyplot as plt
+    if engine == "seaborn":
+        import seaborn as sns
+        sns.set()
+        if part == 1:
+            fig, ax = plt.subplots(1, 1, figsize=(14, 7))
+            ax = sns.boxplot(x="k_value", y="accuracy", hue="dist_metric",
+                             data=results, palette="Set1")
+            ax.set_title("Parameters Optimization")
+            ax.set_ylabel("Accuracy")
+            ax.set_xlabel("K of KNN")
+            l = ax.legend()
+            l.set_title("Distances")
+
+        elif part == 2:
+            fig, (ax_algo1, ax_algo2) = plt.subplots(1, 2, sharey=True,
+                                                     figsize=(14, 7))
+            sns.set()
+
+            ax_algo1.set_title('Weighted [RELIEF]')
+            sns.boxplot(x="k_value", y="accuracy", hue="dist_metric",
+                        data=results[
+                            results["algorithm"].isin(['Weighted knn'])],
+                        palette="Set1", ax=ax_algo1)
+            ax_algo1.set_ylabel("Accuracy")
+            ax_algo1.set_xlabel("K of KNN")
+            ax_algo1_l = ax_algo1.legend()
+            ax_algo1_l.set_title("Distances")
+
+            ax_algo2.set_title('Selection [IG]')
+            sns.boxplot(x="num_features", y="accuracy", hue="dist_metric",
+                        data=results[
+                            results["algorithm"].isin(['Selection knn'])],
+                        palette="Set1", ax=ax_algo2)
+            ax_algo2.set_ylabel("Accuracy")
+            ax_algo2.set_xlabel("Num. of Selected Features")
+            ax_algo2_l = ax_algo1.legend()
+            ax_algo2_l.set_title("Distances")
+
+    else:
+        # Pandas
+        if part == 1:
+            results.boxplot(by=["k_value", "dist_metric"], column=["accuracy"],
+                            figsize=(14, 7), vert=False, grid=True)
+        elif part == 2:
+            results.groupby("algorithm").boxplot(by=["k_value", "dist_metric"],
+                                                 column=["accuracy"],
+                                                 figsize=(14, 7), vert=False,
+                                                 grid=False)
+    if filename:
+        print("Saving figure: {}".format(filename))
+        plt.savefig(filename, dpi=300)
+
+
+def main_run(data_sets, k_values=None, dist_metrics=None, algo_params=None, friedman=True):
+
+    if not k_values:
+        k_values = [1, 3, 5, 7]
+    if not dist_metrics:
+        dist_metrics = ['euclidean', 'cosine', 'hamming', 'minkowski', 'correlation']
+    if not algo_params:
+        algo_params = [{
+            'name': "Weighted knn",
+            'sel_method': 'relief',
+            'num_features': [0]
+        }, {
+            'name': "Selection knn",
+            'sel_method': 'information_gain',
+            'num_features': [0]
+        }]
+
+    results = pd.DataFrame(columns=['algorithm', 'dataset', 'fold', 'dist_metric', 'k_value', 'run_time', 'c_matrix',
+                                    'accuracy'])
+
+    for dataset in data_sets:
+
+        for f in range(0, 10):
+            path = 'datasets/{0}/{0}.fold.00000{1}'.format(dataset['name'], f)
+            X_train, y_train, X_test, y_test = norm_train_test_split(path, dataset['class_field'], dataset['dummy_value'])
+
+            for params in algo_params:
+                for sf in params['num_features']:
+                    weights = knn_weights(X_train, y_train, params['sel_method'], sf)
+
+                    for dist in dist_metrics:
+
+                        for k in k_values:
+                            y_pred, delta = run_knn(kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights),
+                                                    X_train, y_train, X_test)
+                            # Confusion matrix and accuracy
+                            c_matrix, accuracy = confusion_matrix(y_test, y_pred), accuracy_score(y_test, y_pred)
+                            results = results.append({'algorithm': params['name'], 'num_features': np.int(sf), 'dataset': dataset['name'], 'fold': f,
+                                                      'dist_metric': dist, 'k_value': k, 'run_time': delta,
+                                                      'c_matrix': c_matrix, 'accuracy': accuracy}, ignore_index=True)
+                            print(params['name'], dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix), accuracy)
+    if friedman:
+        """
+            FRIEDMAN TESTS
+            
+            The Friedman test (Friedman, 1937, 1940) is a non-parametric equivalent of the repeated-measures ANOVA. 
+            It ranks the algorithms for each data set separately, the best performing algorithm getting the rank of 1, 
+            the second best rank 2. . . . In case of ties (like in iris, lung cancer, mushroom and primary 
+            tumor), average ranks are assigned.
+        """
+        alpha = 0.1
+        sorted_results = results.sort_values(['algorithm', 'dataset', 'dist_metric', 'k_value'], ascending=[1, 1, 1, 1])
+        grouped_accuracies = np.array_split(sorted_results['accuracy'], len(data_sets)*len(k_values)*len(dist_metrics))
+        friedman_chi, p_value = friedmanchisquare(*grouped_accuracies)
+
+        print(results.groupby(['algorithm', 'dataset', 'dist_metric', 'k_value']).mean())
+
+        if (p_value > alpha):
+            print("Accept null hypothesis", "p=" + str(p_value), "alpha=" + str(alpha))
+        else:
+            print("Rejecting null hypothesis")
+            H, p_omnibus, p_corrected, reject = kw_nemenyi(grouped_accuracies)
+            print("Nemenyi scores", H, p_omnibus)
+
+    return results
+
+
+hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
+penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
+
+no_feature_algo = [{
+    'name': "plain knn",
+    'sel_method': 'None',
+    'num_features': [0]
+}]
+
+# Hepatitis Part I
+hep_res_part1 = main_run(hepa_data_set, algo_params=no_feature_algo)
+w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
+# We select Eucleadian with K = 7 (Highest Median with lowest IQR (interquartile range))
+# Hepatitis Part II
+hepa_algo_params = [{
     'name': "Weighted knn",
     'sel_method': 'relief',
-    'num_features': 0
+    'num_features': [0]
 }, {
     'name': "Selection knn",
     'sel_method': 'information_gain',
-    'num_features': 0
+    'num_features': range(1, 19)
 }]
 
-data_sets = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
-# ,{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
-dist_metrics = ['euclidean', 'cosine', 'hamming', 'minkowski', 'correlation']
-k_values = [1, 3, 5, 7]
-results = pd.DataFrame(columns=['algorithm', 'dataset', 'fold', 'dist_metric', 'k_value', 'run_time', 'c_matrix',
-                                'accuracy'])
-
-for dataset in data_sets:
-
-    for f in range(0, 10):
-        path = 'datasets/{0}/{0}.fold.00000{1}'.format(dataset['name'], f)
-        X_train, y_train, X_test, y_test = norm_train_test_split(path, dataset['class_field'], dataset['dummy_value'])
-
-        for params in algo_params:
-            weights = knn_weights(X_train, y_train, params['sel_method'], params['num_features'])
-
-            for dist in dist_metrics:
-
-                for k in k_values:
-                    y_pred, delta = run_knn(kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights),
-                                            X_train, y_train, X_test)
-                    # Confusion matrix and accuracy
-                    c_matrix, accuracy = confusion_matrix(y_test, y_pred), accuracy_score(y_test, y_pred)
-                    results = results.append({'algorithm': params['name'], 'dataset': dataset['name'], 'fold': f,
-                                              'dist_metric': dist, 'k_value': k, 'run_time': delta,
-                                              'c_matrix': c_matrix, 'accuracy': accuracy}, ignore_index=True)
-                    print(params['name'], dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix), accuracy)
-
-"""
-    FRIEDMAN TESTS
-    
-    The Friedman test (Friedman, 1937, 1940) is a non-parametric equivalent of the repeated-measures ANOVA. 
-    It ranks the algorithms for each data set separately, the best performing algorithm getting the rank of 1, 
-    the second best rank 2. . . . In case of ties (like in iris, lung cancer, mushroom and primary 
-    tumor), average ranks are assigned.
-"""
-alpha = 0.1
-sorted_results = results.sort_values(['algorithm', 'dataset', 'dist_metric', 'k_value'], ascending=[1, 1, 1, 1])
-grouped_accuracies = np.array_split(sorted_results['accuracy'], len(data_sets)*len(k_values)*len(dist_metrics))
-friedman_chi, p_value = friedmanchisquare(*grouped_accuracies)
-
-if (p_value > alpha):
-    print("Accept null hypothesis", "p=" + str(p_value), "alpha=" + str(alpha))
-else:
-    print("Rejecting null hypothesis")
-    H, p_omnibus, p_corrected, reject = kw_nemenyi(grouped_accuracies)
-    print("Nemenyi scores", H, p_omnibus)
-
-print(results.groupby(['algorithm', 'dataset', 'dist_metric', 'k_value']).mean())
+hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params, friedman=False)
+w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")

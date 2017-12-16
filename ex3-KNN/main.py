@@ -59,10 +59,14 @@ def knn_weights(X_train, y_train, sel_method='information_gain', num_features=0)
         r.fit_transform(X_train, y_train)
         weights = r.w_
 
+    # if num_features > 0:
+    #     w_idx=np.argsort(weights)
+    #     weights[weights < weights[w_idx[-num_features]]] = 0
+    #     weights[weights >= weights[w_idx[-num_features]]] = 1
     if num_features > 0:
-        w_idx=np.argsort(weights)
-        weights[weights < weights[w_idx[-num_features]]] = 0
-        weights[weights >= weights[w_idx[-num_features]]] = 1
+        w_idx = np.argsort(-weights)
+        weights[w_idx[:num_features]] = 1
+        weights[w_idx[num_features:]] = 0
 
     return weights
 

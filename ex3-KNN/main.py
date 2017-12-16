@@ -17,15 +17,14 @@
     Keep in mind that you need to compute the average accuracy over the 10-fold cross-validation sets.
 """
 import pandas as pd
+import sklearn_relief as relief
+import sklearn.feature_selection as skfs
 from scipy.stats import friedmanchisquare
 from nemenyi import kw_nemenyi
 from kNNAlgorithm import *
 from Parser import *
 from sklearn.metrics import confusion_matrix, accuracy_score
 from datetime import datetime
-
-from selectionKNNAlgorithm import selectionKNNAlgorithm
-from weightedKNNAlgorithm import weightedKNNAlgorithm
 
 
 def train_test_split(path, class_field, dummy_nominal):
@@ -50,13 +49,34 @@ def run_knn(knnAlgorithm, X_train, y_train, X_test):
     return prediction, delta
 
 
-algorithms = [{
+def knn_weights(X_train, y_train, sel_method='information_gain', num_features=0):
+    weights = None
+    if sel_method == 'information_gain':
+        weights = skfs.mutual_info_classif(X_train, y_train)
+
+    elif sel_method == 'relief':
+        r = relief.Relief(n_features=num_features)
+        r.fit_transform(X_train, y_train)
+        weights = r.w_
+
+    if num_features > 0:
+        w_idx=np.argsort(weights)
+        weights[weights < weights[w_idx[-num_features]]] = 0
+        weights[weights >= weights[w_idx[-num_features]]] = 1
+
+    return weights
+
+
+algo_params = [{
     'name': "Weighted knn",
-    'handler': lambda x, y, k, d: weightedKNNAlgorithm(x, y, k, d, weight_method="info_gain")
-}, {
-    'name': "Selection knn",
-    'handler': lambda x, y, k, d: selectionKNNAlgorithm(x, y, k, d, selection_method="info_gain", number_features=5)
+    'sel_method': 'relief',
+    'num_features': 3
 }]
+# , {
+#     'name': "Selection knn",
+#     'sel_method': 'information_gain',
+#     'num_features': 3
+# }]
 
 data_sets = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
 # ,{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
@@ -75,9 +95,10 @@ for dataset in data_sets:
 
             for k in k_values:
 
-                for algo in algorithms:
-                    handler = algo['handler'](X_train, y_train, k, dist)
-                    y_pred, delta = run_knn(handler, X_train, y_train, X_test)
+                for params in algo_params:
+                    weights = knn_weights(X_train, y_train, params['sel_method'], params['num_features'])
+                    algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=weights)
+                    y_pred, delta = run_knn(algo, X_train, y_train, X_test)
                     c_matrix = confusion_matrix(y_test, y_pred)
                     acc = accuracy_score(y_test, y_pred)
                     results = results.append({'algorithm': algo['name'], 'dataset': dataset['name'], 'fold': f,

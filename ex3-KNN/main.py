@@ -50,11 +50,20 @@ def run_knn(knnAlgorithm, X_train, y_train, X_test):
     return prediction, delta
 
 
+algorithms = [{
+    'name': "Weighted knn",
+    'handler': lambda x, y, k, d: weightedKNNAlgorithm(x, y, k, d, weight_method="info_gain")
+}, {
+    'name': "Selection knn",
+    'handler': lambda x, y, k, d: selectionKNNAlgorithm(x, y, k, d, selection_method="info_gain", number_features=5)
+}]
+
 data_sets = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
 # ,{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
 dist_metrics = ['euclidean', 'cosine', 'hamming', 'minkowski', 'correlation']
 k_values = [1, 3, 5, 7]
-results = pd.DataFrame(columns=['dataset', 'fold', 'dist_metric', 'k_value', 'run_time', 'c_matrix', 'accuracy'])
+results = pd.DataFrame(columns=['algorithm', 'dataset', 'fold', 'dist_metric', 'k_value', 'run_time', 'c_matrix',
+                                'accuracy'])
 
 for dataset in data_sets:
 
@@ -65,15 +74,16 @@ for dataset in data_sets:
         for dist in dist_metrics:
 
             for k in k_values:
-                #algo = kNNAlgorithm(k, metric=dist, p=4, policy='voting', weights=None, selection=None)
-                #algo = weightedKNNAlgorithm(X_train,y_train,k,dist,weight_method="info_gain")
-                algo = selectionKNNAlgorithm(X_train, y_train, k, dist, selection_method="info_gain", number_features=5)
-                y_pred, delta = run_knn(algo, X_train, y_train, X_test)
-                c_matrix = confusion_matrix(y_test, y_pred)
-                acc = accuracy_score(y_test, y_pred)
-                results = results.append({'dataset': dataset['name'], 'fold': f, 'dist_metric': dist, 'k_value': k,
-                                          'run_time': delta, 'c_matrix': c_matrix, 'accuracy': acc}, ignore_index=True)
-                print(dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix),acc)
+
+                for algo in algorithms:
+                    handler = algo['handler'](X_train, y_train, k, dist)
+                    y_pred, delta = run_knn(handler, X_train, y_train, X_test)
+                    c_matrix = confusion_matrix(y_test, y_pred)
+                    acc = accuracy_score(y_test, y_pred)
+                    results = results.append({'algorithm': algo['name'], 'dataset': dataset['name'], 'fold': f,
+                                              'dist_metric': dist, 'k_value': k, 'run_time': delta,
+                                              'c_matrix': c_matrix, 'accuracy': acc}, ignore_index=True)
+                    print(algo['name'], dataset['name'], f, dist, k, 'c_matrix' + str(c_matrix), acc)
 
 """
     FRIEDMAN TESTS
@@ -84,7 +94,7 @@ for dataset in data_sets:
     tumor), average ranks are assigned.
 """
 alpha = 0.1
-sorted_results = results.sort_values(['dataset', 'dist_metric', 'k_value'], ascending=[1,1,1])
+sorted_results = results.sort_values(['algorithm', 'dataset', 'dist_metric', 'k_value'], ascending=[1, 1, 1, 1])
 grouped_accuracies = np.array_split(sorted_results['accuracy'], len(data_sets)*len(k_values)*len(dist_metrics))
 friedman_chi, p_value = friedmanchisquare(*grouped_accuracies)
 
@@ -95,4 +105,4 @@ else:
     H, p_omnibus, p_corrected, reject = kw_nemenyi(grouped_accuracies)
     print("Nemenyi scores", H, p_omnibus)
 
-print(results.groupby(["k_value","dist_metric"]).mean())
+print(results.groupby(['algorithm', 'dataset', 'dist_metric', 'k_value']).mean())

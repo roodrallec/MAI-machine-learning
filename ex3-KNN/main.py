@@ -11,7 +11,7 @@ from knn_utils import *
 from kNNAlgorithm import *
 from Parser import *
 # DEFAULT VALUES
-LOAD_PICKLE = False
+LOAD_PICKLE = True
 SAVE_PICKLE = False
 NULL_ACCEPT = 0.1
 DEFAULT_K = [1, 3, 5, 7]
@@ -61,46 +61,63 @@ penb_res_part2 = pd.read_pickle("penb_res_part2.df") if LOAD_PICKLE else None
 """
 hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
 no_feature_algo = [{'name': "plain knn", 'sel_method': 'None', 'num_features': [0]}]
+
 if hep_res_part1 is None:
     hep_res_part1 = main_run(hepa_data_set, algo_params=no_feature_algo)
 
-accept, p_value, mean_ranks = acceptance_test(hep_res_part1)
+if SAVE_PICKLE:
+    hep_res_part1.to_pickle("hep_res_part1.df")
+
 w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
-hep_res_part1.to_pickle("hep_res_part1.df") if SAVE_PICKLE else None
-print('ACCEPT:', accept, 'P_VALUE:', p_value, 'MEAN_RANKS', mean_ranks)
+accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1)
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
 """
     Hepatitis Part II:    
 """
-# hepa_algo_params = [{'name': "Weighted knn", 'sel_method': 'relief', 'num_features': [0]},
-#                     {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 19),
-#                      'discrete_features': 'auto'}]
-# if hep_res_part2 is None:
-#     hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params)
-#
-# w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
-# hep_res_part2.to_pickle("hep_res_part2.df") if SAVE_PICKLE else None
-# """
-#     Pen-based Part I:
-#     Euclidian k = 3, all algos have the same results. Standard distance selected with best K median.
-# """
-# penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
-# if penb_res_part1 is None:
-#     penb_res_part1 = main_run(penb_data_set, dist_metrics=['euclidean', 'cosine', 'hamming', 'minkowski'],
-#                               algo_params=no_feature_algo)
-#
-# w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
-# w3plot(
-#     penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])], part=1, filename="penb_res_part1_no_hamming.png"
-# )
-# penb_res_part1.to_pickle("penb_res_part1.df") if SAVE_PICKLE else None
-# """
-#     Pen-based Part II:
-# """
-# penb_algo_params = [{'name': "Weighted knn", 'sel_method': 'relieff', 'num_features': [0]},
-#                     {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 19),
-#                      'discrete_features': False}]
-# if penb_res_part2 is None:
-#     penb_res_part2 = main_run(penb_data_set, k_values=[3], dist_metrics=['euclidean'], algo_params=penb_algo_params)
-#
-# w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
-# penb_res_part2.to_pickle("penb_res_part2.df") if SAVE_PICKLE else None
+hepa_algo_params = [{'name': "Weighted knn", 'sel_method': 'relief', 'num_features': [0]},
+                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 19),
+                     'discrete_features': 'auto'}]
+
+if hep_res_part2 is None:
+    hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params)
+
+if SAVE_PICKLE:
+    hep_res_part2.to_pickle("hep_res_part2.df")
+
+w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
+accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2)
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+"""
+    Pen-based Part I:
+    Euclidian k = 3, all algos have the same results. Standard distance selected with best K median.
+"""
+penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
+
+if penb_res_part1 is None:
+    penb_res_part1 = main_run(penb_data_set, dist_metrics=['euclidean', 'cosine', 'hamming', 'minkowski'],
+                              algo_params=no_feature_algo)
+if SAVE_PICKLE:
+    penb_res_part1.to_pickle("penb_res_part1.df")
+
+w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
+w3plot(
+    penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])], part=1, filename="penb_res_part1_no_hamming.png"
+)
+accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2)
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+"""
+    Pen-based Part II:
+"""
+penb_algo_params = [{'name': "Weighted knn", 'sel_method': 'relieff', 'num_features': [0]},
+                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 19),
+                     'discrete_features': False}]
+
+if penb_res_part2 is None:
+    penb_res_part2 = main_run(penb_data_set, k_values=[3], dist_metrics=['euclidean'], algo_params=penb_algo_params)
+
+if SAVE_PICKLE:
+    penb_res_part2.to_pickle("penb_res_part2.df")
+
+w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
+accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2)
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)

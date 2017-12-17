@@ -54,15 +54,16 @@ def knn_weights(X_train, y_train, sf, **kwargs):
 
 def friedman_test(accuracies_array, alpha=0.1):
     friedman_chi, p_value = friedmanchisquare(*accuracies_array)
+    accept = True
+    mean_ranks = None
+    p_values = None
 
-    if p_value > alpha:
-        accept = True
-    else:
+    if p_value <= alpha:
         accept = False
         nemenyi = NemenyiTestPostHoc(np.asarray(accuracies_array))
-        mean_ranks, p_value = nemenyi.do()
+        mean_ranks, p_values = nemenyi.do()
 
-    return accept, p_value, mean_ranks
+    return accept, p_value, mean_ranks, p_values
 
 
 def w3plot(results, part=1, engine="seaborn", filename=None):

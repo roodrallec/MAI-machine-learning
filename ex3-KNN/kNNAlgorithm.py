@@ -97,7 +97,7 @@ class kNNAlgorithm(object):
             if self.weights is None:
                 diff = X - X_samples[j, :]
             else:
-                diff = X * self.weights - X_samples[j, :] * self.weights
+                diff = self.weights * (X - X_samples[j, :])
             dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
             dist_mat[j, :] = dist_vec
 
@@ -117,13 +117,13 @@ class kNNAlgorithm(object):
             if self.weights is None:
                 dist_mat[j, :] = np.mean(X != X_samples[j, :], axis=1)
             else:
-                dist_mat[j, :] = np.mean((X * self.weights) != (X_samples[j, :] * self.weights), axis=1)
+                dist_mat[j, :] = np.mean(self.weights * (X  != X_samples[j, :]), axis=1)
 
         return dist_mat
 
     def _metric_cosine(self, X, X_samples):
         """
-        Implements euclidean distance, computes the distance from each X_sample to
+        Implements cosine distance, computes the distance from each X_sample to
         all X individuals.
         X_samples row. Assuming numeric values.
         :param X: Matrix (N_train x M) (Individuals x Features)
@@ -151,7 +151,7 @@ class kNNAlgorithm(object):
 
     def _metric_minkowski(self, X, X_samples):
         """
-        Implements euclidean distance, computes the distance from each X_sample to
+        Implements minkowski distance, computes the distance from each X_sample to
         all X individuals.
         X_samples row. Assuming numeric values.
         :param X: Matrix (N_train x M) (Individuals x Features)
@@ -165,7 +165,7 @@ class kNNAlgorithm(object):
             if self.weights is None:
                 diff = X - X_samples[j, :]
             else:
-                diff = X * self.weights - X_samples[j, :] * self.weights
+                diff = self.weights * (X - X_samples[j, :])
             dist_vec = np.power(np.nansum(np.power(diff, p), axis=1), 1. / p)
             dist_mat[j, :] = dist_vec
 
@@ -173,12 +173,12 @@ class kNNAlgorithm(object):
 
     def _metric_correlation(self, X, X_samples):
         """
-        Implements euclidean distance, computes the distance from each X_sample to
+        Implements correlation distance, computes the distance from each X_sample to
         all X individuals.
         X_samples row. Assuming numeric values.
         :param X: Matrix (N_train x M) (Individuals x Features)
         :param X_samples: Matrix (N_samples x M) (Individuals x Features)
-        :return: Matrix of euclidean distances (N_samples x N_train)
+        :return: Matrix of correlation distances (N_samples x N_train)
         """
 
         dist_mat = np.zeros((X_samples.shape[0], X.shape[0]))

@@ -64,9 +64,10 @@ no_feature_algo = [{'name': "plain knn", 'sel_method': 'None', 'num_features': [
 if hep_res_part1 is None:
     hep_res_part1 = main_run(hepa_data_set, algo_params=no_feature_algo)
 
-acceptance_test(hep_res_part1)
+accept, p_value, mean_ranks = acceptance_test(hep_res_part1)
 w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
 hep_res_part1.to_pickle("hep_res_part1.df") if SAVE_PICKLE else None
+print('ACCEPT:', accept, 'P_VALUE:', p_value, 'MEAN_RANKS', mean_ranks)
 """
     Hepatitis Part II:    
 """

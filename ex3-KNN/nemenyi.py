@@ -1,128 +1,285 @@
-#
-#  ALL CREDIT TO https://gist.github.com/alimuldal/21b4442b7e7f36f6a17b
-#
+from scipy.stats import friedmanchisquare, rankdata, norm
+from scipy.special import gammaln
 import numpy as np
-from scipy import stats
-from itertools import combinations
-from statsmodels.stats.multitest import multipletests
-from statsmodels.stats.libqsturng import psturng
-import warnings
 
 
-def kw_nemenyi(groups, to_compare=None, alpha=0.05, method='tukey'):
-    """
-    Kruskal-Wallis 1-way ANOVA with Nemenyi's multiple comparison test
-    Arguments:
-    ---------------
-    groups: sequence
-        arrays corresponding to k mutually independent samples from
-        continuous populations
-    to_compare: sequence
-        tuples specifying the indices of pairs of groups to compare, e.g.
-        [(0, 1), (0, 2)] would compare group 0 with 1 & 2. by default, all
-        possible pairwise comparisons between groups are performed.
-    alpha: float
-        family-wise error rate used for correcting for multiple comparisons
-        (see statsmodels.stats.multitest.multipletests for details)
-    method: string
-        the null distribution of the test statistic used to determine the
-        corrected p-values for each pair of groups, can be either "tukey"
-        (studentized range) or "chisq" (Chi-squared). the "chisq" method will
-        correct for tied ranks.
-    Returns:
-    ---------------
-    H: float
-        Kruskal-Wallis H-statistic
-    p_omnibus: float
-        p-value corresponding to the global null hypothesis that the medians of
-        the groups are all equal
-    p_corrected: float array
-        corrected p-values for each pairwise comparison, corresponding to the
-        null hypothesis that the pair of groups has equal medians. note that
-        these are only meaningful if the global null hypothesis is rejected.
-    reject: bool array
-        True for pairs where the null hypothesis can be rejected for the given
-        alpha
-    Reference:
-    ---------------
-    """
+# consistent with https://cran.r-project.org/web/packages/PMCMR/vignettes/PMCMR.pdf p. 17
+def test_nemenyi():
+    data = np.asarray([(3.88, 5.64, 5.76, 4.25, 5.91, 4.33), (30.58, 30.14, 16.92, 23.19, 26.74, 10.91),
+                       (25.24, 33.52, 25.45, 18.85, 20.45, 26.67), (4.44, 7.94, 4.04, 4.4, 4.23, 4.36),
+                       (29.41, 30.72, 32.92, 28.23, 23.35, 12), (38.87, 33.12, 39.15, 28.06, 38.23, 26.65)])
+    print(friedmanchisquare(data[0], data[1], data[2], data[3], data[4], data[5]))
+    nemenyi = NemenyiTestPostHoc(data)
+    meanRanks, pValues = nemenyi.do()
+    print(meanRanks)
+    print(pValues)
 
-    # omnibus test (K-W ANOVA)
-    # -------------------------------------------------------------------------
 
-    if method is None:
-        method = 'chisq'
-    elif method not in ('tukey', 'chisq'):
-        raise ValueError('method must be either "tukey" or "chisq"')
+class NemenyiTestPostHoc():
 
-    groups = [np.array(gg) for gg in groups]
+    def __init__(self, data):
+        self._noOfGroups = data.shape[0]
+        self._noOfSamples = data.shape[1]
+        self._data = data
 
-    k = len(groups)
+    def do(self):
+        dataAsRanks = np.full(self._data.shape, np.nan)
+        for i in range(self._noOfSamples):
+            dataAsRanks[:, i] = rankdata(self._data[:, i])
+        meansOfRanksOfDependentSamples = np.mean(dataAsRanks, 1)
+        qValues = self._compareStatisticsOfAllPairs(meansOfRanksOfDependentSamples)
+        pValues = self._calculatePValues(qValues)
 
-    n = np.array([len(gg) for gg in groups])
-    if np.any(n < 5):
-        warnings.warn("Sample sizes < 5 are not recommended (K-W test assumes "
-                      "a chi square distribution)")
+        return meansOfRanksOfDependentSamples, pValues
 
-    allgroups = np.concatenate(groups)
-    N = len(allgroups)
-    ranked = stats.rankdata(allgroups)
+    def _compareStatisticsOfAllPairs(self, meansOfRanks):
+        noOfMeansOfRanks = len(meansOfRanks)
+        compareResults = np.zeros((noOfMeansOfRanks-1, noOfMeansOfRanks))
+        for i in range(noOfMeansOfRanks-1):
+            for j in range(i+1, noOfMeansOfRanks):
+                compareResults[i][j] = self._compareStatisticsOfSinglePair((meansOfRanks[i], meansOfRanks[j]))
+        return compareResults
 
-    # correction factor for ties
-    T = stats.tiecorrect(ranked)
-    if T == 0:
-        raise ValueError('All numbers are identical in kruskal')
+    def _compareStatisticsOfSinglePair(self, meansOfRanksPair):
+        diff = abs(meansOfRanksPair[0] - meansOfRanksPair[1])
+        qval = diff / np.sqrt(self._noOfGroups * (self._noOfGroups + 1) / (6 * self._noOfSamples))
+        return qval * np.sqrt(2)
 
-    # sum of ranks for each group
-    j = np.insert(np.cumsum(n), 0, 0)
-    R = np.empty(k, dtype=np.float)
-    for ii in range(k):
-        R[ii] = ranked[j[ii]:j[ii + 1]].sum()
+    def _calculatePValues(self, qValues):
+        for qRow in qValues:
+            for i in range(len(qRow)):
+                qRow[i] = self._ptukey(qRow[i], 1, self._noOfGroups, np.inf)
+        return 1 - qValues
 
-    # the Kruskal-Wallis H-statistic
-    H = (12. / (N * (N + 1.))) * ((R ** 2.) / n).sum() - 3 * (N + 1)
+    def _wprob(self, w, rr, cc):
+        nleg = 12
+        ihalf = 6
 
-    # apply correction factor for ties
-    H /= T
+        C1 = -30
+        C2 = -50
+        C3 = 60
+        M_1_SQRT_2PI = 1 / np.sqrt(2 * np.pi)
+        bb = 8
+        wlar = 3
+        wincr1 = 2
+        wincr2 = 3
+        xleg = [
+            0.981560634246719250690549090149,
+            0.904117256370474856678465866119,
+            0.769902674194304687036893833213,
+            0.587317954286617447296702418941,
+            0.367831498998180193752691536644,
+            0.125233408511468915472441369464
+        ]
+        aleg = [
+            0.047175336386511827194615961485,
+            0.106939325995318430960254718194,
+            0.160078328543346226334652529543,
+            0.203167426723065921749064455810,
+            0.233492536538354808760849898925,
+            0.249147045813402785000562436043
+        ]
 
-    df_omnibus = k - 1
-    p_omnibus = stats.distributions.chi2.sf(H, df_omnibus)
+        qsqz = w * 0.5
 
-    # multiple comparisons
-    # -------------------------------------------------------------------------
+        if qsqz >= bb:
+            return 1.0
 
-    # by default we compare every possible pair of groups
-    if to_compare is None:
-        to_compare = tuple(combinations(range(k), 2))
+        # find (f(w/2) - 1) ^ cc
+        # (first term in integral of hartley's form).
 
-    ncomp = len(to_compare)
+        pr_w = 2 * norm.cdf(qsqz) - 1
+        if pr_w >= np.exp(C2 / cc):
+            pr_w = pr_w ** cc
+        else:
+            pr_w = 0.0
 
-    dif = np.empty(ncomp, dtype=np.float)
-    B = np.empty(ncomp, dtype=np.float)
+        # if w is large then the second component of the
+        # integral is small, so fewer intervals are needed.
 
-    Rmean = R / n
-    A = N * (N + 1) / 12.
+        wincr = wincr1 if w > wlar else wincr2
 
-    for pp, (ii, jj) in enumerate(to_compare):
+        # find the integral of second term of hartley's form
+        # for the integral of the range for equal-length
+        # intervals using legendre quadrature.  limits of
+        # integration are from (w/2, 8).  two or three
+        # equal-length intervals are used.
 
-        # absolute difference of mean ranks
-        dif[pp] = np.abs(Rmean[ii] - Rmean[jj])
-        B[pp] = (1. / n[ii]) + (1. / n[jj])
+        # blb and bub are lower and upper limits of integration.
 
-    if method == 'tukey':
+        blb = qsqz
+        binc = (bb - qsqz) / wincr
+        bub = blb + binc
+        einsum = 0.0
 
-        # p-values obtained from the upper quantiles of the studentized range
-        # distribution
-        qval = dif / np.sqrt(A * B)
-        p_corrected = psturng(qval * np.sqrt(2), k, 1E6)
+        # integrate over each interval
 
-    elif method == 'chisq':
+        cc1 = cc - 1.0
+        for wi in range(1, wincr + 1):
+            elsum = 0.0
+            a = 0.5 * (bub + blb)
 
-        # p-values obtained from the upper quantiles of the chi-squared
-        # distribution
-        chi2 = (dif ** 2.) / (A * B)
-        p_corrected = stats.distributions.chi2.sf(chi2 * T, k - 1)
+            # legendre quadrature with order = nleg
 
-    reject = p_corrected <= alpha
+            b = 0.5 * (bub - blb)
 
-    return H, p_omnibus, p_corrected, reject
+            for jj in range(1, nleg + 1):
+                if (ihalf < jj):
+                    j = (nleg - jj) + 1
+                    xx = xleg[j-1]
+                else:
+                    j = jj
+                    xx = -xleg[j-1]
+                c = b * xx
+                ac = a + c
+
+                # if exp(-qexpo/2) < 9e-14
+                # then doesn't contribute to integral
+
+                qexpo = ac * ac
+                if qexpo > C3:
+                    break
+
+                pplus = 2 * norm.cdf(ac)
+                pminus = 2 * norm.cdf(ac, w)
+
+                # if rinsum ^ (cc-1) < 9e-14, */
+                # then doesn't contribute to integral */
+
+                rinsum = (pplus * 0.5) - (pminus * 0.5)
+                if (rinsum >= np.exp(C1 / cc1)):
+                    rinsum = (aleg[j-1] * np.exp(-(0.5 * qexpo))) * (rinsum ** cc1)
+                    elsum += rinsum
+
+            elsum *= (((2.0 * b) * cc) * M_1_SQRT_2PI)
+            einsum += elsum
+            blb = bub
+            bub += binc
+
+        # if pr_w ^ rr < 9e-14, then return 0
+        pr_w += einsum
+        if pr_w <= np.exp(C1 / rr):
+            return 0
+
+        pr_w = pr_w ** rr
+        if (pr_w >= 1):
+            return 1
+        return pr_w
+
+    def _ptukey(self, q, rr, cc, df):
+
+        M_LN2 = 0.69314718055994530942
+
+        nlegq = 16
+        ihalfq = 8
+
+        eps1 = -30.0
+        eps2 = 1.0e-14
+        dhaf = 100.0
+        dquar = 800.0
+        deigh = 5000.0
+        dlarg = 25000.0
+        ulen1 = 1.0
+        ulen2 = 0.5
+        ulen3 = 0.25
+        ulen4 = 0.125
+        xlegq = [
+            0.989400934991649932596154173450,
+            0.944575023073232576077988415535,
+            0.865631202387831743880467897712,
+            0.755404408355003033895101194847,
+            0.617876244402643748446671764049,
+            0.458016777657227386342419442984,
+            0.281603550779258913230460501460,
+            0.950125098376374401853193354250e-1
+        ]
+        alegq = [
+            0.271524594117540948517805724560e-1,
+            0.622535239386478928628438369944e-1,
+            0.951585116824927848099251076022e-1,
+            0.124628971255533872052476282192,
+            0.149595988816576732081501730547,
+            0.169156519395002538189312079030,
+            0.182603415044923588866763667969,
+            0.189450610455068496285396723208
+        ]
+
+        if q <= 0:
+            return 0
+
+        if (df < 2) or (rr < 1) or (cc < 2):
+            return float('nan')
+
+        if np.isfinite(q) is False:
+            return 1
+
+        if df > dlarg:
+            return self._wprob(q, rr, cc)
+
+        # in fact we don't need the code below and majority of variables:
+
+        # calculate leading constant
+
+        f2 = df * 0.5
+        f2lf = ((f2 * np.log(df)) - (df * M_LN2)) - gammaln(f2)
+        f21 = f2 - 1.0
+
+        # integral is divided into unit, half-unit, quarter-unit, or
+        # eighth-unit length intervals depending on the value of the
+        # degrees of freedom.
+
+        ff4 = df * 0.25
+        if df <= dhaf:
+            ulen = ulen1
+        elif df <= dquar:
+            ulen = ulen2
+        elif df <= deigh:
+            ulen = ulen3
+        else:
+            ulen = ulen4
+
+        f2lf += np.log(ulen)
+
+        ans = 0.0
+
+        for i in range(1, 51):
+            otsum = 0.0
+
+            # legendre quadrature with order = nlegq
+            # nodes (stored in xlegq) are symmetric around zero.
+
+            twa1 = (2*i - 1) * ulen
+
+            for jj in range(1, nlegq + 1):
+                if (ihalfq < jj):
+                    j = jj - ihalfq - 1
+                    t1 = (f2lf + (f21 * np.log(twa1 + (xlegq[j] * ulen)))) - (((xlegq[j] * ulen) + twa1) * ff4)
+                else:
+                    j = jj - 1
+                    t1 = (f2lf + (f21 * np.log(twa1 - (xlegq[j] * ulen)))) + (((xlegq[j] * ulen) - twa1) * ff4)
+
+                # if exp(t1) < 9e-14, then doesn't contribute to integral
+                if t1 >= eps1:
+                    if ihalfq < jj:
+                        qsqz = q * np.sqrt(((xlegq[j] * ulen) + twa1) * 0.5)
+                    else:
+                        qsqz = q * np.sqrt(((-(xlegq[j] * ulen)) + twa1) * 0.5)
+
+                    wprb = self._wprob(qsqz, rr, cc)
+                    rotsum = (wprb * alegq[j]) * np.exp(t1)
+                    otsum += rotsum
+
+            # if integral for interval i < 1e-14, then stop.
+            # However, in order to avoid small area under left tail,
+            # at least  1 / ulen  intervals are calculated.
+
+            if (i * ulen >= 1.0) and (otsum <= eps2):
+                break
+
+            ans += otsum
+
+        return min(1, ans)
+
+
+if __name__ == '__main__':
+    test_nemenyi()

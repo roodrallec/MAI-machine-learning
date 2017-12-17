@@ -1,5 +1,5 @@
 import pandas as pd
-from nemenyi import kw_nemenyi
+from nemenyi import NemenyiTestPostHoc
 from knn_utils import *
 import sklearn_relief as relief
 import sklearn.feature_selection as skfs
@@ -59,10 +59,10 @@ def friedman_test(accuracies_array, alpha=0.1):
         accept = True
     else:
         accept = False
-        H, p_omnibus, p_corrected, reject = kw_nemenyi(accuracies_array)
-        p_value = p_corrected
+        nemenyi = NemenyiTestPostHoc(np.asarray(accuracies_array))
+        mean_ranks, p_value = nemenyi.do()
 
-    return accept, p_value
+    return accept, p_value, mean_ranks
 
 
 def w3plot(results, part=1, engine="seaborn", filename=None):

@@ -31,11 +31,13 @@ def run_knn(knnAlgorithm, X_train, y_train, X_test, y_test):
 def knn_weights(X_train, y_train, sf, **kwargs):
     num_features = sf
     weights = None
+    w_idx = ['N/A']
+
     if kwargs["sel_method"] == 'information_gain':
         weights = skfs.mutual_info_classif(X_train, y_train, discrete_features=kwargs["discrete_features"])
+        w_idx = np.argsort(-weights)
 
         if num_features > 0:
-            w_idx = np.argsort(-weights)
             weights[w_idx[:num_features]] = 1
             weights[w_idx[num_features:]] = 0
 
@@ -43,13 +45,15 @@ def knn_weights(X_train, y_train, sf, **kwargs):
         r = relief.Relief(n_features=num_features)
         r.fit_transform(X_train, y_train)
         weights = r.w_
+        w_idx = np.argsort(-weights)
 
     elif kwargs["sel_method"] == 'relieff':
         r = relief.ReliefF()
         r.fit_transform(X_train, y_train)
         weights = r.w_
+        w_idx = np.argsort(-weights)
 
-    return weights
+    return weights, w_idx
 
 
 def friedman_test(accuracies_array, alpha=0.1):

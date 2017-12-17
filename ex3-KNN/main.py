@@ -49,24 +49,26 @@ def run_knn(knnAlgorithm, X_train, y_train, X_test):
     return prediction, delta
 
 
-def knn_weights(X_train, y_train, sel_method='information_gain', num_features=0):
+def knn_weights(X_train, y_train, sf, **kwargs):
+    num_features = sf
     weights = None
-    if sel_method == 'information_gain':
-        weights = skfs.mutual_info_classif(X_train, y_train)
+    if kwargs["sel_method"] == 'information_gain':
+        weights = skfs.mutual_info_classif(X_train, y_train, discrete_features=kwargs["descrete_features"])
 
-    elif sel_method == 'relief':
+        if num_features > 0:
+            w_idx = np.argsort(-weights)
+            weights[w_idx[:num_features]] = 1
+            weights[w_idx[num_features:]] = 0
+
+    elif kwargs["sel_method"] == 'relief':
         r = relief.Relief(n_features=num_features)
         r.fit_transform(X_train, y_train)
         weights = r.w_
 
-    # if num_features > 0:
-    #     w_idx=np.argsort(weights)
-    #     weights[weights < weights[w_idx[-num_features]]] = 0
-    #     weights[weights >= weights[w_idx[-num_features]]] = 1
-    if num_features > 0:
-        w_idx = np.argsort(-weights)
-        weights[w_idx[:num_features]] = 1
-        weights[w_idx[num_features:]] = 0
+    elif kwargs["sel_method"] == 'relieff':
+        r = relief.ReliefF()
+        r.fit_transform(X_train, y_train)
+        weights = r.w_
 
     return weights
 
@@ -154,7 +156,7 @@ def main_run(data_sets, k_values=None, dist_metrics=None, algo_params=None, frie
 
             for params in algo_params:
                 for sf in params['num_features']:
-                    weights = knn_weights(X_train, y_train, params['sel_method'], sf)
+                    weights = knn_weights(X_train, y_train, sf, **params)
 
                     for dist in dist_metrics:
 
@@ -214,7 +216,8 @@ hepa_algo_params = [{
 }, {
     'name': "Selection knn",
     'sel_method': 'information_gain',
-    'num_features': range(1, 19)
+    'num_features': range(1, 19),
+    'descrete_features': 'auto'
 }]
 
 hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params, friedman=False)
@@ -222,25 +225,27 @@ w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
 
 
 ## Pen-based Part I
-penb_res_part1 = main_run(penb_data_set, algo_params=no_feature_algo)
-penb_res_part1.to_pickle("penb_res_part1.df")
-penb_res_part1_l = pd.read_pickle("penb_res_part1.df")
-assert penb_res_part1 == penb_res_part1_l
-exit(0)
+# penb_res_part1 = main_run(penb_data_set, dist_metrics=['euclidean', 'cosine', 'hamming', 'minkowski'], algo_params=no_feature_algo)
+# penb_res_part1.to_pickle("penb_res_part1.df")
+penb_res_part1 = pd.read_pickle("penb_res_part1.df")
 w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
+w3plot(penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])], part=1, filename="penb_res_part1_nohamming.png")
+# Euclidian k = 3, all algos have the same results. Standard distance selected with best K median.
 
-# We select Eucleadian with K = 7 (Highest Median with lowest IQR (interquartile range))
-# Hepatitis Part II
+# Pen-based Part II
 penb_algo_params = [{
     'name': "Weighted knn",
-    'sel_method': 'relief',
+    'sel_method': 'relieff',
     'num_features': [0]
 }, {
     'name': "Selection knn",
     'sel_method': 'information_gain',
-    'num_features': range(1, 19)
+    'num_features': range(1, 19),
+    'descrete_features': False
 }]
 
-hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params, friedman=False)
-w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
+# penb_res_part2 = main_run(penb_data_set, k_values=[3], dist_metrics=['euclidean'], algo_params=penb_algo_params, friedman=False)
+# penb_res_part2.to_pickle("penb_res_part2.df")
+penb_res_part2 = pd.read_pickle("penb_res_part2.df")
+w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
 

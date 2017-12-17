@@ -11,8 +11,8 @@ from knn_utils import *
 from kNNAlgorithm import *
 from Parser import *
 # DEFAULT VALUES
-LOAD_PICKLE = False
-SAVE_PICKLE = True
+LOAD_PICKLE = True
+SAVE_PICKLE = False
 NULL_ACCEPT = 0.1
 DEFAULT_K = [1, 3, 5, 7]
 DEFAULT_DIST = ['euclidean', 'cosine', 'hamming', 'minkowski', 'correlation']
@@ -76,9 +76,10 @@ print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
 """
     Hepatitis Part II:
 """
-hepa_algo_params = [{'name': "Weighted knn", 'sel_method': 'relief', 'num_features': [0]},
-                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 20),
-                     'discrete_features': 'auto'}]
+hepa_algo_params = [{'name': "Weighted relief", 'sel_method': 'relief', 'num_features': [0]},
+                    {'name': "Selection relief", 'sel_method': 'relief', 'num_features': range(1, 20)},
+                    {'name': "Weighted ig", 'sel_method': 'information_gain', 'num_features': [0], 'discrete_features': 'auto'},
+                    {'name': "Selection ig", 'sel_method': 'information_gain', 'num_features': range(1, 20), 'discrete_features': 'auto'}]
 
 if hep_res_part2 is None:
     hep_res_part2 = main_run(hepa_data_set, k_values=[7], dist_metrics=['euclidean'], algo_params=hepa_algo_params)
@@ -89,48 +90,61 @@ if SAVE_PICKLE:
 w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2)
 print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
-# """
-#     Pen-based Part I:
-#     Euclidian k = 3, all algos have the same results. Standard distance selected with best K median.
-# """
-# penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
-#
-# if penb_res_part1 is None:
-#     penb_res_part1 = main_run(penb_data_set, dist_metrics=['euclidean', 'cosine', 'hamming', 'minkowski'],
-#                               algo_params=no_feature_algo)
-# if SAVE_PICKLE:
-#     penb_res_part1.to_pickle("penb_res_part1.df")
-#
-# w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
-# w3plot(
-#     penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])], part=1, filename="penb_res_part1_no_hamming.png"
-# )
-# # Discard Hamming distance as low performant
-# penb_res_part1 = penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])]
-# accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1)
-# # No point of applying Nemenyi test, p-value of 0.06 and absolute differences are between 0.98-0.99 of accurancy
-# print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
-# """
-#     Pen-based Part II:
-# """
-# penb_algo_params = [{'name': "Weighted knn", 'sel_method': 'relieff', 'num_features': [0]},
-#                     {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 16),
-#                      'discrete_features': False}]
-#
-# if penb_res_part2 is None:
-#     penb_res_part2 = main_run(penb_data_set, k_values=[3], dist_metrics=['euclidean'], algo_params=penb_algo_params)
-#
-# if SAVE_PICKLE:
-#     penb_res_part2.to_pickle("penb_res_part2.df")
-#
-# w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
-# # Conclusions:
-# # - the more features the better accuracy in Selection
-# #   a) we consider that the pen-based was made by experts considering all features are important for the classification
-# #   b) chart confirm the trend of increasing accuracy by adding features
-# # - Compare the weighted against the best selection candidate
-# #   weighted candidate vs against last/best (two) selection candidate
-# #   results are no differences p-value of 0.246, as all seems to be important, weighted should be fine
-# penb_res_part2_2 = penb_res_part2[(penb_res_part2["algorithm"] == "Weighted knn") | (penb_res_part2["num_features"] >= 17.0)]
-# accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part2_2)
-# print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+"""
+    Pen-based Part I:
+    Euclidian k = 3, all algos have the same results. Standard distance selected with best K median.
+"""
+penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
+
+if penb_res_part1 is None:
+    penb_res_part1 = main_run(penb_data_set, dist_metrics=['euclidean', 'cosine', 'hamming', 'minkowski'],
+                              algo_params=no_feature_algo)
+if SAVE_PICKLE:
+    penb_res_part1.to_pickle("penb_res_part1.df")
+
+w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
+w3plot(
+    penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])], part=1, filename="penb_res_part1_no_hamming.png"
+)
+# Discard Hamming distance as low performant
+penb_res_part1 = penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])]
+accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1)
+# No point of applying Nemenyi test, p-value of 0.06 and absolute differences are between 0.98-0.99 of accurancy
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+"""
+    Pen-based Part II:
+"""
+penb_algo_params = [{'name': "Weighted relief", 'sel_method': 'relief', 'num_features': [0]},
+                    {'name': "Selection relief", 'sel_method': 'relief', 'num_features': range(1, 16)},
+                    {'name': "Weighted ig", 'sel_method': 'information_gain', 'num_features': [0], 'discrete_features': False},
+                    {'name': "Selection ig", 'sel_method': 'information_gain', 'num_features': range(1, 16), 'discrete_features': False}]
+
+if penb_res_part2 is None:
+    penb_res_part2 = main_run(penb_data_set, k_values=[3], dist_metrics=['euclidean'], algo_params=penb_algo_params)
+
+if SAVE_PICKLE:
+    penb_res_part2.to_pickle("penb_res_part2.df")
+
+w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
+# Conclusions:
+# - the more features the better accuracy in Selection
+#   a) we consider that the pen-based was made by experts considering all features are important for the classification
+#   b) chart confirm the trend of increasing accuracy by adding features
+# - Compare the weighted against the best selection candidate
+#   weighted candidates vs against last/best (two) selection candidate
+#   results are no differences p-value of 0.246, as all seems to be important, weighted should be fine
+penb_res_part2_2 = penb_res_part2[penb_res_part2["algorithm"].isin(["Weighted relief", "Weighted ig"]) | (penb_res_part2["num_features"] == 15.0)]
+accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part2_2)
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+fig, ax = plt.subplots(1, 1, figsize=(14, 7))
+ax = sns.boxplot(x="k_value", y="accuracy", hue="algorithm",
+                 data=penb_res_part2_2, palette="Set1")
+ax.set_title("Comparison of final models")
+ax.set_ylabel("Accuracy")
+ax.set_xlabel("K of KNN")
+l = ax.legend()
+l.set_title("Algorithms")
+plt.savefig("penb_res_part2_2.png", dpi=300)

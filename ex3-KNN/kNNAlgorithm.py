@@ -117,7 +117,7 @@ class kNNAlgorithm(object):
             if self.weights is None:
                 dist_mat[j, :] = np.mean(X != X_samples[j, :], axis=1)
             else:
-                dist_mat[j, :] = np.mean((X * self.weights) != (X_samples[j, :] * self.weights), axis=1)
+                dist_mat[j, :] = np.mean(self.weights * (X  != X_samples[j, :]), axis=1)
 
         return dist_mat
 

@@ -8,7 +8,7 @@ from kNNAlgorithm import *
 from Parser import *
 from sklearn.metrics import confusion_matrix, accuracy_score
 from datetime import datetime
-
+from kw_nemenyi import *
 
 def norm_train_test_split(path, class_field, dummy_value):
     X_train, labels, y_train, _ = read_dataset(path + '.train.arff', class_field, dummy_value)
@@ -60,8 +60,11 @@ def friedman_test(accuracies_array, alpha=0.1):
 
     if p_value <= alpha:
         accept = False
-        nemenyi = NemenyiTestPostHoc(np.asarray(accuracies_array))
-        mean_ranks, p_values = nemenyi.do()
+
+        # nemenyi = NemenyiTestPostHoc(np.asarray(accuracies_array))
+        # mean_ranks, p_values = nemenyi.do()
+
+        H, p_value, p_values, reject = kw_nemenyi(accuracies_array, alpha=alpha)
 
     return accept, p_value, mean_ranks, p_values
 

@@ -103,7 +103,10 @@ w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
 w3plot(
     penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])], part=1, filename="penb_res_part1_no_hamming.png"
 )
-accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2)
+# Discard Hamming distance as low performant
+penb_res_part1 = penb_res_part1[~penb_res_part1["dist_metric"].isin(["hamming"])]
+accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1)
+# No point of applying Nemenyi test, p-value of 0.06 and absolute differences are between 0.98-0.99 of accurancy
 print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
 """
     Pen-based Part II:
@@ -119,5 +122,13 @@ if SAVE_PICKLE:
     penb_res_part2.to_pickle("penb_res_part2.df")
 
 w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
-accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2)
+# Conclusions:
+# - the more features the better accuracy in Selection
+#   a) we consider that the pen-based was made by experts considering all features are important for the classification
+#   b) chart confirm the trend of increasing accuracy by adding features
+# - Compare the weighted against the best selection candidate
+#   weighted candidate vs against last/best (two) selection candidate
+#   results are no differences p-value of 0.246, as all seems to be important, weighted should be fine
+penb_res_part2_2 = penb_res_part2[(penb_res_part2["algorithm"] == "Weighted knn") | (penb_res_part2["num_features"] >= 17.0)]
+accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part2_2)
 print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)

@@ -1,9 +1,20 @@
+"""
+    Nemenyi post-hoc statistical test implementation.
+    =====
+    Taken from:
+    https://gist.github.com/ptasheq/ceb29503fbc16b048bb121684f7fe7dc
+
+    All credit to user:
+    miecznik92@gmail.com
+
+    Port of r package and checked to be consistent with:
+    https://cran.r-project.org/web/packages/PMCMR/vignettes/PMCMR.pdf p. 17
+"""
 from scipy.stats import friedmanchisquare, rankdata, norm
 from scipy.special import gammaln
 import numpy as np
 
 
-# consistent with https://cran.r-project.org/web/packages/PMCMR/vignettes/PMCMR.pdf p. 17
 def test_nemenyi():
     data = np.asarray([(3.88, 5.64, 5.76, 4.25, 5.91, 4.33), (30.58, 30.14, 16.92, 23.19, 26.74, 10.91),
                        (25.24, 33.52, 25.45, 18.85, 20.45, 26.67), (4.44, 7.94, 4.04, 4.4, 4.23, 4.36),

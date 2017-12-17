@@ -97,7 +97,7 @@ class kNNAlgorithm(object):
             if self.weights is None:
                 diff = X - X_samples[j, :]
             else:
-                diff = X * self.weights - X_samples[j, :] * self.weights
+                diff = self.weights * (X - X_samples[j, :])
             dist_vec = np.sqrt(np.nansum(np.power(diff, 2), axis=1))
             dist_mat[j, :] = dist_vec
 
@@ -165,7 +165,7 @@ class kNNAlgorithm(object):
             if self.weights is None:
                 diff = X - X_samples[j, :]
             else:
-                diff = X * self.weights - X_samples[j, :] * self.weights
+                diff = self.weights * (X - X_samples[j, :])
             dist_vec = np.power(np.nansum(np.power(diff, p), axis=1), 1. / p)
             dist_mat[j, :] = dist_vec
 

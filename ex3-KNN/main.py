@@ -77,7 +77,7 @@ print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
     Hepatitis Part II:
 """
 hepa_algo_params = [{'name': "Weighted knn", 'sel_method': 'relief', 'num_features': [0]},
-                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 16),
+                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 20),
                      'discrete_features': 'auto'}]
 
 if hep_res_part2 is None:

@@ -13,7 +13,7 @@ from Parser import *
 # DEFAULT VALUES
 LOAD_PICKLE = True
 SAVE_PICKLE = False
-NULL_ACCEPT = 0.1
+NULL_ACCEPT = 0.05
 DEFAULT_K = [1, 3, 5, 7]
 DEFAULT_DIST = ['euclidean', 'cosine', 'hamming', 'minkowski', 'correlation']
 DEFAULT_A_PARAMS = [{'name': "Weighted knn", 'sel_method': 'relief', 'num_features': [0]},
@@ -75,7 +75,7 @@ print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
     Hepatitis Part II:    
 """
 hepa_algo_params = [{'name': "Weighted knn", 'sel_method': 'relief', 'num_features': [0]},
-                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 19),
+                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 20),
                      'discrete_features': 'auto'}]
 
 if hep_res_part2 is None:
@@ -112,7 +112,7 @@ print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
     Pen-based Part II:
 """
 penb_algo_params = [{'name': "Weighted knn", 'sel_method': 'relieff', 'num_features': [0]},
-                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 19),
+                    {'name': "Selection knn", 'sel_method': 'information_gain', 'num_features': range(1, 16),
                      'discrete_features': False}]
 
 if penb_res_part2 is None:

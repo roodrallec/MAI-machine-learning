@@ -89,7 +89,7 @@ def w3plot(results, part=1, engine="seaborn", filename=None):
                                                      figsize=(14, 7))
             sns.set()
 
-            ax_algo1.set_title('Weighted [RELIEF]')
+            ax_algo1.set_title('Weighted [RELIEF(F)]')
             sns.boxplot(x="k_value", y="accuracy", hue="dist_metric",
                         data=results[
                             results["algorithm"].isin(['Weighted knn'])],

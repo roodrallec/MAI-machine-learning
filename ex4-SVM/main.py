@@ -12,7 +12,7 @@ from sklearn.svm import SVC
 from Parser import *
 # DEFAULT VALUES
 LOAD_PICKLE = False
-SAVE_PICKLE = False
+SAVE_PICKLE = True
 NULL_ACCEPT = 0.1
 DEFAULT_DEGREE = [1, 2, 3, 4, 5]
 DEFAULT_MAX_ITER = [-1,1000]
@@ -52,21 +52,20 @@ def acceptance_test(results, accept=NULL_ACCEPT, folds=10):
 # Load results from file if LOAD_PICKLE flag is True
 hep_res_part1 = pd.read_pickle("hep_res_part1.df") if LOAD_PICKLE else None
 penb_res_part1 = pd.read_pickle("penb_res_part1.df") if LOAD_PICKLE else None
-#
-# """
-#     Hepatitis Part I:
-# """
-# hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
-#
-# if hep_res_part1 is None:
-#     hep_res_part1 = main_run(hepa_data_set, plot_fig=False)
-#
-# if SAVE_PICKLE:
-#     hep_res_part1.to_pickle("hep_res_part1.df")
-#
-# w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
-# accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1)
-# print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+
+"""
+     Hepatitis Part I:
+""" hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
+
+if hep_res_part1 is None:
+     hep_res_part1 = main_run(hepa_data_set, plot_fig=False)
+
+if SAVE_PICKLE:
+     hep_res_part1.to_pickle("hep_res_part1.df")
+
+w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
+accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1)
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
 
 
 

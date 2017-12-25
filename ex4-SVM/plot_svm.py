@@ -10,18 +10,19 @@ def plot_svm_hyperplane(X, y, support_vectors, vector_idx, num_vectors, coefs, i
 
     plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig, ax)
 
-    # coefs are the coeficents of the hyperplane. Coefs is the w vector in  w * x + b = 0
-    # building hyperplane line:
-    xx = np.linspace(X[:, 0].min(), X[:, 0].max())
-    yy = (-coefs[:, 0] * xx - (intercept[:])) / coefs[:, 1]
-
-    m, b = np.polyfit(xx, yy, 1)
-    ax.plot(xx, m * xx + b, '-')
+    if type(coefs[0]) is np.ndarray:
+        # coefs are the coeficents of the hyperplane. Coefs is the w vector in  w * x + b = 0
+        # building hyperplane line:
+        xx = np.linspace(X[:, 0].min(), X[:, 0].max())
+        yy = (-coefs[:, 0] * xx - (intercept[:]))
+        yy = yy / coefs[:, 1]
+        m, b = np.polyfit(xx, yy, 1)
+        ax.plot(xx, m * xx + b, '-')
 
     plt.show(0)
 
     return fig, ax
-    #
+
 
 
 def plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig=None, ax=None):

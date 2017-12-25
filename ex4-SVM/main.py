@@ -55,7 +55,9 @@ penb_res_part1 = pd.read_pickle("penb_res_part1.df") if LOAD_PICKLE else None
 
 """
      Hepatitis Part I:
-""" hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
+"""
+
+hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
 
 if hep_res_part1 is None:
      hep_res_part1 = main_run(hepa_data_set, plot_fig=False)

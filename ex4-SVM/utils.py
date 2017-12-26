@@ -86,47 +86,22 @@ def w3plot(results, part=1, engine="seaborn", filename=None):
             l.set_title("C")
 
         elif part == 2:
-            fig, (ax_algo1, ax_algo2, ax_algo3, ax_algo4) = plt.subplots(
-                1, 4, sharey=True, figsize=(28, 7))
-            sns.set()
-            # 'Weighted relief', 'Selection relief', 'Weighted ig', 'Selection ig'
+            ig, ax = plt.subplots(1, 1, figsize=(14, 7))
+            ax = sns.boxplot(x="max_iter", y="accuracy",
+                             data=results, palette="Set1")
+            ax.set_title("Parameters Optimization")
+            ax.set_ylabel("Accuracy")
+            ax.set_xlabel("max iter")
+
+        elif part == 3:
+            ig, ax = plt.subplots(1, 1, figsize=(14, 7))
+            ax = sns.boxplot(x="decision_f", y="accuracy",
+                             data=results, palette="Set1")
+            ax.set_title("Parameters Optimization")
+            ax.set_ylabel("Accuracy")
+            ax.set_xlabel("decision function")
 
 
-            ax_algo1.set_title('Weighted RELIEF(F)')
-            sns.boxplot(x="k_value", y="accuracy", hue="dist_metric",
-                        data=results[results["algorithm"] == "Weighted relief"],
-                        palette="Set1", ax=ax_algo1)
-            ax_algo1.set_ylabel("Accuracy")
-            ax_algo1.set_xlabel("K of KNN")
-            ax_algo1_l = ax_algo1.legend()
-            ax_algo1_l.set_title("Distances")
-
-            ax_algo2.set_title('Selection RELIEF(F)')
-            sns.boxplot(x="num_features", y="accuracy", hue="dist_metric",
-                        data=results[results["algorithm"] == "Selection relief"],
-                        palette="Set1", ax=ax_algo2)
-            ax_algo2.set_ylabel("Accuracy")
-            ax_algo2.set_xlabel("Num. of Selected Features")
-            ax_algo2_l = ax_algo1.legend()
-            ax_algo2_l.set_title("Distances")
-
-            ax_algo3.set_title('Weighted IG')
-            sns.boxplot(x="k_value", y="accuracy", hue="dist_metric",
-                        data=results[results["algorithm"] == "Weighted ig"],
-                        palette="Set1", ax=ax_algo3)
-            ax_algo3.set_ylabel("Accuracy")
-            ax_algo3.set_xlabel("K of KNN")
-            ax_algo3_l = ax_algo1.legend()
-            ax_algo3_l.set_title("Distances")
-
-            ax_algo4.set_title('Selection IG')
-            sns.boxplot(x="num_features", y="accuracy", hue="dist_metric",
-                        data=results[results["algorithm"] == "Selection ig"],
-                        palette="Set1", ax=ax_algo4)
-            ax_algo4.set_ylabel("Accuracy")
-            ax_algo4.set_xlabel("Num. of Selected Features")
-            ax_algo4_l = ax_algo1.legend()
-            ax_algo4_l.set_title("Distances")
 
     else:
         # Pandas

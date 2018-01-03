@@ -6,8 +6,9 @@
 import numpy as np
 import cvxopt
 import cvxopt.solvers
-from sklearn.svm import SVC
 import matplotlib.pyplot as plt
+from sklearn.svm import SVC
+from sklearn.metrics import confusion_matrix
 
 
 if __name__ == "__main__":
@@ -71,19 +72,31 @@ if __name__ == "__main__":
         X1, y1, X2, y2 = generate_data_set1()
         X_train, y_train = split_train(X1, y1, X2, y2)
         X_test, y_test = split_test(X1, y1, X2, y2)
-
-         #### 
         # Write here your SVM code and choose a linear kernel
+        clf = SVC(kernel='linear')
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
         # plot the graph with the support_vectors_
-        # print on the console the number of correct predictions and the total of predictions
-        ####
+        weights = clf.coef_[0]
+        intercept = clf.intercept_[0]
+        x_grid = np.linspace(-5, 5)
+        y_grid = (-weights[0] / weights[1]) * x_grid - (intercept) / weights[1]
+        plt.plot(x_grid, y_grid, 'k-')
+        plt.scatter(clf.support_vectors_[:, 0], clf.support_vectors_[:, 1],
+                    s=40, c=y_train[clf.support_], marker='x')
+        plt.axis('tight')
+        plt.show()
+        # print on the console the number of correct predictions and the total
+        # of predictions
+        tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+        print('Correctly predicted: ', tn + tp)
+        print('Total predictions: ', tn + tp + fp + fn)
 
 
     def run_svm_dataset2():
         X1, y1, X2, y2 = generate_data_set2()
         X_train, y_train = split_train(X1, y1, X2, y2)
         X_test, y_test = split_test(X1, y1, X2, y2)
-
         #### 
         # Write here your SVM code and choose a linear kernel with the best C pparameter
         # plot the graph with the support_vectors_

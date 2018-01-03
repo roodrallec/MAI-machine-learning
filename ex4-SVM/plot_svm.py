@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_svm_hyperplane(X, y, support_vectors, vector_idx, num_vectors, coefs, intercept):
+def plot_svm_hyperplane(X, y, support_vectors, vector_idx, num_vectors, coefs, intercept, plot_alldata=True):
     # plot x0 and x1, support vectors and hyperplane
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig, ax)
+    plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig, ax, plot_alldata)
 
     if type(coefs[0]) is np.ndarray:
         # coefs are the coeficents of the hyperplane. Coefs is the w vector in  w * x + b = 0
@@ -25,7 +25,7 @@ def plot_svm_hyperplane(X, y, support_vectors, vector_idx, num_vectors, coefs, i
 
 
 
-def plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig=None, ax=None):
+def plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig=None, ax=None, plot_alldata=True):
     i = 0
     colors = ['b', 'g', 'y', 'r', 'orange']
     classes = np.unique(y)
@@ -33,13 +33,15 @@ def plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig=None, a
     show = False
 
     if fig is None or ax is None:
-        fig, ax = plt.subplots()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
         show = True
 
-    for cl in classes:
-        ax.scatter(X[y == cl, 0], X[y == cl, 1], s=10, edgecolors=colors[i % len(colors)],
-                   facecolors='none', linewidths=2, label=('Class ' + str(cl)))
-        i += 1
+    if plot_alldata:
+        for cl in classes:
+            ax.scatter(X[y == cl, 0], X[y == cl, 1], s=10, edgecolors=colors[i % len(colors)],
+                       facecolors='none', linewidths=2, label=('Class ' + str(cl)))
+            i += 1
 
     i = 0
     j = 0
@@ -63,7 +65,7 @@ def plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig=None, a
 def plot_test_data(X_test, y_predict, y_true, fig=None, ax=None):
 
     i = 0
-    colors = ['r', 'greenyellow', 'b', 'r', 'orange']
+    colors = ['b', 'greenyellow', 'y', 'r', 'orange']
     classes = np.unique([y_true, y_predict])
 
     show = False
@@ -80,7 +82,7 @@ def plot_test_data(X_test, y_predict, y_true, fig=None, ax=None):
 
     i = 0
 
-    colors = ['r', 'greenyellow', 'orange', 'g', 'y', ]
+    colors = ['b', 'greenyellow', 'orange', 'g', 'y', ]
     for cl in classes:
         ax.scatter(X_test[y_predict == cl, 0], X_test[y_predict == cl, 1], s=40, marker="s", edgecolors=colors[i % len(colors)],
                    facecolors='none', linewidths=2, label=('Class ' + str(cl)))

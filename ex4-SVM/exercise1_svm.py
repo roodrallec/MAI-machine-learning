@@ -106,6 +106,7 @@ if __name__ == "__main__":
 
         #print(coef)
         #print(intercept)
+        # print(num_vectors)
 
         y_predict = svm_model.predict(X_test)
         score = svm_model.score(X_test, y_test)
@@ -114,7 +115,9 @@ if __name__ == "__main__":
         # plot_svm.plot_svm_vectors(X_train, y_train, support_vectors, vector_idx, num_vectors)
         plot_svm.plot_svm_hyperplane(X_train, y_train, support_vectors, vector_idx, num_vectors, coef, intercept)
 
-        plot_svm.plot_svm_hyperplane(X_test, y_test, support_vectors, vector_idx, num_vectors, coef, intercept)
+        fig, ax = plot_svm.plot_svm_hyperplane(X_test, y_test, support_vectors, vector_idx, num_vectors, coef,
+                                        intercept, plot_alldata=False)
+        plot_svm.plot_test_data(X_test, y_predict, y_test, fig=fig, ax=ax)
 
         ####
 
@@ -140,14 +143,15 @@ if __name__ == "__main__":
 
         #print(coef)
         #print(intercept)
-        print(num_vectors)
+        #print(num_vectors)
 
         y_predict = svm_model.predict(X_test)
         score = svm_model.score(X_test, y_test)
 
         print_performance(y_test, y_predict, score)
         plot_svm.plot_svm_vectors(X_train, y_train, support_vectors, vector_idx, num_vectors)
-        #plot_svm.plot_svm_hyperplane(X_train, y_train, support_vectors, vector_idx, num_vectors, coef, intercept)
+        fig, ax = plot_svm.plot_svm_vectors(X_train, y_train, support_vectors, vector_idx, num_vectors, plot_alldata=False)
+        plot_svm.plot_test_data(X_test, y_predict, y_test, fig, ax)
 
         ####
 
@@ -182,44 +186,82 @@ if __name__ == "__main__":
         score = svm_model.score(X_test, y_test)
 
         if plot_fig:
-            #print_performance(y_test, y_predict, score)
-            #plot_svm.plot_svm_vectors(X_train, y_train, support_vectors, vector_idx, num_vectors)
-            fig, ax = plot_svm.plot_svm_hyperplane(X_train, y_train, support_vectors, vector_idx, num_vectors, coef, intercept)
-            plot_svm.plot_svm_hyperplane(X_test, y_test, support_vectors, vector_idx, num_vectors, coef, intercept)
+            print_performance(y_test, y_predict, score)
+            #fig, ax = plot_svm.plot_svm_hyperplane(X_train, y_train, support_vectors, vector_idx, num_vectors, coef, intercept)
+            fig, ax = plot_svm.plot_svm_hyperplane(X_test, y_test, support_vectors, vector_idx, num_vectors, coef, intercept, plot_alldata=False)
             plot_svm.plot_test_data(X_test, y_predict, y_test, fig=fig, ax=ax)
 
 
 
         return C, score
+
+    def run_svm_dataset3_v2(X_train, y_train, X_test, y_test, C=1, plot_fig=True):
+
         ####
+        # Write here your SVM code and use a gaussian kernel
+        # plot the graph with the support_vectors_
+        # print on the console the number of correct predictions and the total of predictions
+
+        svm_model = SVC(C=C, kernel='linear')
+        svm_model.fit(X_train, y_train)
+        vector_idx = svm_model.support_
+        support_vectors = svm_model.support_vectors_
+        num_vectors = svm_model.n_support_
+        dual_coef = svm_model.dual_coef_
+        coef = svm_model.coef_
+        intercept = svm_model.intercept_
+
+        # print(coef)
+        # print(intercept)
+        # print(num_vectors)
+
+        y_predict = svm_model.predict(X_test)
+        score = svm_model.score(X_test, y_test)
+
+        if plot_fig:
+            # print_performance(y_test, y_predict, score)
+            # plot_svm.plot_svm_vectors(X_train, y_train, support_vectors, vector_idx, num_vectors)
+            fig, ax = plot_svm.plot_svm_hyperplane(X_train, y_train, support_vectors, vector_idx, num_vectors, coef, intercept)
+            fig, ax = plot_svm.plot_svm_hyperplane(X_test, y_test, support_vectors, vector_idx, num_vectors, coef,
+                                                   intercept, plot_alldata=False)
+            plot_svm.plot_test_data(X_test, y_predict, y_test, fig=fig, ax=ax)
+
+        return C, score
 
 
     #############################################################
     #############################################################
     #############################################################
 
-    # EXECUTE SVM with THIS DATASETS
-    run_svm_dataset1()  # data distribution 1
-    run_svm_dataset2()   # data distribution 2
-    run_svm_dataset3()   # data distribution 3
+
 
 
 
 
 def iterate_nonlinear_set():
 
+    X1, y1, X2, y2 = generate_data_set2()
+    X_train, y_train = split_train(X1, y1, X2, y2)
+    X_test, y_test = split_test(X1, y1, X2, y2)
+
     results = pd.DataFrame(columns=['C', 'score'])
 
-    for c in np.arange(0.1,1,0.1):
-        for i in range(0,500):
-            Cr,score_r=run_svm_dataset3(C=c,plot_fig=False)
+    for c in np.arange(0.1,1.1,0.1):
+        #for i in range(0,500):
+            Cr,score_r=run_svm_dataset3_v2( X_train, y_train, X_test, y_test, C=c,plot_fig=True)
             results = results.append({'C': Cr, 'score': score_r}, ignore_index=True)
 
     avg_score=results.groupby("C").mean()
     print (avg_score)
 
 
-#iterate_nonlinear_set()
+
+    # EXECUTE SVM with THIS DATASETS
+    #run_svm_dataset1()  # data distribution 1
+    #run_svm_dataset2()   # data distribution 2
+    run_svm_dataset3()   # data distribution 3
+    # iterate_nonlinear_set()
+
 
 #############################################################
 #############################################################

@@ -88,7 +88,6 @@ def plot_test_data(X_test, y_predict, y_true, fig=None, ax=None):
                    facecolors='none', linewidths=2, label=('Class ' + str(cl)))
         i += 1
 
-    print("hold")
 
     if show:
         plt.show()

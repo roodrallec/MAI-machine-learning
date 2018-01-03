@@ -58,19 +58,19 @@ penb_res_part3 = pd.read_pickle("penb_res_part3.df") if LOAD_PICKLE else None
 """
      Hepatitis Part I:
 """
-#
-# hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
-#
-# if hep_res_part1 is None:
-#      hep_res_part1 = main_run(hepa_data_set, kernel=['linear', 'rbf', 'sigmoid'], C=np.arange(0.1, 1.1, 0.1),
-#                               plot_fig=False)
-#
-# if SAVE_PICKLE:
-#      hep_res_part1.to_pickle("hep_res_part1.df")
-#
-# w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
-# accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1)
-# print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+
+hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
+
+if hep_res_part1 is None:
+      hep_res_part1 = main_run(hepa_data_set, kernel=['linear', 'rbf', 'sigmoid'], C=np.arange(0.1, 1.1, 0.1),
+                               plot_fig=False)
+
+if SAVE_PICKLE:
+      hep_res_part1.to_pickle("hep_res_part1.df")
+
+w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
+accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1)
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
 
 
 """
@@ -80,7 +80,7 @@ penb_res_part3 = pd.read_pickle("penb_res_part3.df") if LOAD_PICKLE else None
 hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
 
 if hep_res_part2 is None:
-     hep_res_part2 = main_run(hepa_data_set, kernel=['linear'], C=np.arange(1, 1, 0.1),
+     hep_res_part2 = main_run(hepa_data_set, kernel=['linear'], C=np.arange(1, 1.05, 0.1),
                               max_iter=np.arange(100, 1000, 100), plot_fig=False)
 
 if SAVE_PICKLE:
@@ -97,33 +97,34 @@ print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
     Pen-based Part I:
 
 """
-# penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
-#
-# if penb_res_part1 is None:
-#     #penb_res_part1 = main_run(penb_data_set, kernel=['linear', 'rbf', 'sigmoid'], C=np.arange(0.1, 1.1, 0.1),
-#                               plot_fig=False)
-# if SAVE_PICKLE:
-#     penb_res_part1.to_pickle("penb_res_part1.df")
-#
-# w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
-#
-#
-# accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1)
-# # No point of applying Nemenyi test, p-value of 0.06 and absolute differences are between 0.98-0.99 of accurancy
-# print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
+penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
+
+if penb_res_part1 is None:
+     #penb_res_part1 = main_run(penb_data_set, kernel=['linear', 'rbf', 'sigmoid'], C=np.arange(0.1, 1.1, 0.1),
+                               plot_fig=False)
+if SAVE_PICKLE:
+    penb_res_part1.to_pickle("penb_res_part1.df")
+
+w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
+
+
+accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1)
+# No point of applying Nemenyi test, p-value of 0.06 and absolute differences are between 0.98-0.99 of accurancy
+print('ACCEPT:', accept, 'MEAN_RANKS', mean_ranks, 'P_VALUES', p_value)
 
 
 
 
 
 """
-    Pen-based Part II :
+    Pen-based Part III:
 
 """
+
 penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
 
 if penb_res_part3 is None:
-    penb_res_part3 = main_run(penb_data_set, kernel=['linear'], C=np.arange(1, 1, 0.1), decision_f=['ovr', 'ovo'],
+    penb_res_part3 = main_run(penb_data_set, kernel=['linear'], C=np.arange(1, 1.05, 0.1), decision_f=['ovr', 'ovo'],
                               plot_fig=False)
 if SAVE_PICKLE:
     penb_res_part3.to_pickle("penb_res_part3.df")

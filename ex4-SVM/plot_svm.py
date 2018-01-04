@@ -19,7 +19,7 @@ def plot_svm_hyperplane(X, y, support_vectors, vector_idx, num_vectors, coefs, i
         m, b = np.polyfit(xx, yy, 1)
         ax.plot(xx, m * xx + b, '-')
 
-    plt.show(0)
+    plt.show(block=True)
 
     return fig, ax
 
@@ -57,7 +57,7 @@ def plot_svm_vectors(X, y, support_vectors, vector_idx, num_vectors, fig=None, a
         i += 1
 
     if show:
-        plt.show()
+        plt.show(block=True)
 
     return fig, ax
 
@@ -90,6 +90,56 @@ def plot_test_data(X_test, y_predict, y_true, fig=None, ax=None):
 
 
     if show:
-        plt.show()
+        plt.show(block=True)
 
     return fig, ax
+
+
+def emerrf_plot_svm(clf, X, y, X_test=None, y_test=None, y_predict=None,
+                    filename=None, title=None):
+    # Based on:
+    # http://scikit-learn.org/stable/auto_examples/svm/plot_separating_hyperplane.html
+
+    plt.scatter(X[:, 0], X[:, 1], c=y, marker='.', s=30, cmap=plt.cm.Set1, alpha=0.5)
+    legend_labels = ["Train data"]
+
+    is_test_data = X_test is not None and y_test is not None
+    if is_test_data:
+        plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, marker='v', s=30,
+                    cmap=plt.cm.Set1)
+        legend_labels.append("Test data")
+
+    if is_test_data and y_predict is not None:
+        plt.scatter(X_test[:, 0], X_test[:, 1], c=y_predict, marker='^', s=30,
+                    cmap=plt.cm.Set1)
+        legend_labels.append("Prediction")
+
+    plt.legend(legend_labels)
+    if title:
+        plt.title(title)
+
+    # plot the decision function
+    ax = plt.gca()
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+
+    # create grid to evaluate model
+    xx = np.linspace(xlim[0], xlim[1], 30)
+    yy = np.linspace(ylim[0], ylim[1], 30)
+    YY, XX = np.meshgrid(yy, xx)
+    xy = np.vstack([XX.ravel(), YY.ravel()]).T
+    Z = clf.decision_function(xy).reshape(XX.shape)
+
+    # plot decision boundary and margins
+    ax.contour(XX, YY, Z, colors='k', levels=[-1, 0, 1], alpha=0.5,
+               linestyles=['--', '-', '--'])
+    # plot support vectors
+    ax.scatter(clf.support_vectors_[:, 0], clf.support_vectors_[:, 1],
+               s=100,
+               linewidth=1, facecolors='none')
+
+    if filename:
+        print("Saving figure: {}".format(filename))
+        plt.savefig(filename, dpi=150)
+
+    plt.show(block=True)

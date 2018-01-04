@@ -34,11 +34,11 @@ def read_dataset(fileroute, classfield='class', emptyNomField='?'):
 
         if 'nominal' in x_meta[label][0]:
 
-            if emptyNomField in x[label]:
+            if emptyNomField not in x[label]:
                 c = Counter([t for t in x[label]])
-                most_c = c.most_common(1)[0]
+                most_c = c.most_common(1)[0][0]
 
-                if emptyNomField in most_c:
+                if most_c in emptyNomField:
                     most_c = c.most_common(2)[1]
 
                 idx = np.where(x[label] == emptyNomField)[0]

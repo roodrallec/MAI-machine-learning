@@ -71,8 +71,11 @@ print pd.DataFrame(hep_res_part1.groupby(["kernel", "C"]).accuracy.agg(['mean', 
 w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1, part=1)
 print('ACCEPT:', accept, 'P_VALUES', p_value)
-print(p_values)
 
+print("Full Nemenyi p-values Matrix")
+print(p_values)
+print("Statistically relevant Nemenyi p-values")
+print(p_values.stack()[(p_values<NULL_ACCEPT).stack()])
 
 """
      Hepatitis Part II:
@@ -90,8 +93,11 @@ if SAVE_PICKLE:
 w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2, part=2)
 print('ACCEPT:', accept, 'P_VALUES', p_value)
-print(p_values)
 
+print("Full Nemenyi p-values Matrix")
+print(p_values)
+print("Statistically relevant Nemenyi p-values")
+print(p_values.stack()[(p_values<NULL_ACCEPT).stack()])
 
 
 """
@@ -111,8 +117,11 @@ w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1, part=1)
 # No point of applying Nemenyi test, p-value of 0.06 and absolute differences are between 0.98-0.99 of accurancy
 print('ACCEPT:', accept, 'P_VALUES', p_value)
-print(p_values)
 
+print("Full Nemenyi p-values Matrix")
+print(p_values)
+print("Statistically relevant Nemenyi p-values")
+print(p_values.stack()[(p_values<NULL_ACCEPT).stack()])
 
 
 """
@@ -133,4 +142,8 @@ if SAVE_PICKLE:
 w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part2, part=2)
 print('ACCEPT:', accept, 'P_VALUES', p_value)
+
+print("Full Nemenyi p-values Matrix")
 print(p_values)
+print("Statistically relevant Nemenyi p-values")
+print(p_values.stack()[(p_values<NULL_ACCEPT).stack()])

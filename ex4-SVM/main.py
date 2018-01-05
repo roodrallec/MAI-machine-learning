@@ -66,7 +66,8 @@ if hep_res_part1 is None:
 if SAVE_PICKLE:
     hep_res_part1.to_pickle("hep_res_part1.df")
 
-print pd.DataFrame(hep_res_part1.groupby(["kernel", "C"]).accuracy.agg(['mean', 'std'])).to_csv()
+print pd.DataFrame(hep_res_part1.groupby(["kernel", "C"]).accuracy.agg(
+    ['mean', 'std'])).transpose().to_csv()
 
 w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1, part=1)
@@ -90,6 +91,9 @@ if hep_res_part2 is None:
 if SAVE_PICKLE:
     hep_res_part2.to_pickle("hep_res_part2.df")
 
+    print pd.DataFrame(hep_res_part2.groupby(["gamma", "C"]).accuracy.agg(
+        ['mean', 'std'])).transpose().to_csv()
+
 w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2, part=2)
 print('ACCEPT:', accept, 'P_VALUES', p_value)
@@ -111,7 +115,8 @@ if penb_res_part1 is None:
 if SAVE_PICKLE:
     penb_res_part1.to_pickle("penb_res_part1.df")
 
-print pd.DataFrame(penb_res_part1.groupby(["kernel", "C"]).accuracy.agg(['mean', 'std'])).to_csv()
+print pd.DataFrame(penb_res_part1.groupby(["kernel", "C"]).accuracy.agg(
+    ['mean', 'std'])).transpose().to_csv()
 
 w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1, part=1)
@@ -138,6 +143,9 @@ if penb_res_part2 is None:
                              gammas=np.linspace(0.05, 0.25, 5), plot_fig=False)
 if SAVE_PICKLE:
     penb_res_part2.to_pickle("penb_res_part2.df")
+
+print pd.DataFrame(penb_res_part2.groupby(["gamma", "C"]).accuracy.agg(
+    ['mean', 'std'])).transpose().to_csv()
 
 w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part2, part=2)

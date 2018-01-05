@@ -11,6 +11,8 @@ from utils import *
 from sklearn.svm import SVC
 from Parser import *
 # DEFAULT VALUES
+LOAD_PICKLE = True
+SAVE_PICKLE = False
 NULL_ACCEPT = 0.05
 DEFAULT_KERNEL = ['linear', 'rbf', 'sigmoid', 'poly']
 DEFAULT_C = np.array([1, 10, 100, 1000])
@@ -49,12 +51,23 @@ def acceptance_test(results, accept=NULL_ACCEPT, part=1):
 
     return friedman_test(results2.as_matrix(), labels, accept)
 
-
+# Load results from file if LOAD_PICKLE flag is True
+hep_res_part1 = pd.read_pickle("hep_res_part1.df") if LOAD_PICKLE else None
+hep_res_part2 = pd.read_pickle("hep_res_part2.df") if LOAD_PICKLE else None
+penb_res_part1 = pd.read_pickle("penb_res_part1.df") if LOAD_PICKLE else None
+penb_res_part2 = pd.read_pickle("penb_res_part2.df") if LOAD_PICKLE else None
 """
      Hepatitis Part I:
 """
 hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
-hep_res_part1 = main_run(hepa_data_set)
+if hep_res_part1 is None:
+    hep_res_part1 = main_run(hepa_data_set)
+
+if SAVE_PICKLE:
+    hep_res_part1.to_pickle("hep_res_part1.df")
+
+print pd.DataFrame(hep_res_part1.groupby(["kernel", "C"]).accuracy.agg(['mean', 'std'])).to_csv()
+
 w3plot(hep_res_part1, part=1, filename="hepa_res_part1.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part1, part=1)
 print('ACCEPT:', accept, 'P_VALUES', p_value)
@@ -65,10 +78,14 @@ print(p_values)
      Hepatitis Part II:
 """
 hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class"}]
-hep_res_part2 = main_run(hepa_data_set,
-                         kernel=['rbf'],
-                         C=[1, 5, 10, 15, 20, 30, 40, 50],
-                         gammas=np.linspace(0.05, 0.25, 5), plot_fig=False)
+if hep_res_part2 is None:
+    hep_res_part2 = main_run(hepa_data_set,
+                             kernel=['rbf'],
+                             C=[1, 5, 10, 15, 20, 30, 40, 50],
+                             gammas=np.linspace(0.05, 0.25, 5),
+                             plot_fig=False)
+if SAVE_PICKLE:
+    hep_res_part2.to_pickle("hep_res_part2.df")
 
 w3plot(hep_res_part2, part=2, filename="hepa_res_part2.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(hep_res_part2, part=2)
@@ -82,7 +99,13 @@ print(p_values)
 
 """
 penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
-penb_res_part1 = main_run(penb_data_set)
+
+if penb_res_part1 is None:
+    penb_res_part1 = main_run(penb_data_set)
+if SAVE_PICKLE:
+    penb_res_part1.to_pickle("penb_res_part1.df")
+
+print pd.DataFrame(penb_res_part1.groupby(["kernel", "C"]).accuracy.agg(['mean', 'std'])).to_csv()
 
 w3plot(penb_res_part1, part=1, filename="penb_res_part1.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part1, part=1)
@@ -98,10 +121,15 @@ print(p_values)
 """
 
 penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
-penb_res_part2 = main_run(penb_data_set,
-                         kernel=['rbf'],
-                         C=[50, 75, 100, 125, 250, 500, 750, 1000],
-                         gammas=np.linspace(0.05, 0.25, 5), plot_fig=False)
+
+if penb_res_part2 is None:
+    penb_res_part2 = main_run(penb_data_set,
+                             kernel=['rbf'],
+                             C=[50, 75, 100, 125, 250, 500, 750, 1000],
+                             gammas=np.linspace(0.05, 0.25, 5), plot_fig=False)
+if SAVE_PICKLE:
+    penb_res_part2.to_pickle("penb_res_part2.df")
+
 w3plot(penb_res_part2, part=2, filename="penb_res_part2.png")
 accept, p_value, mean_ranks, p_values = acceptance_test(penb_res_part2, part=2)
 print('ACCEPT:', accept, 'P_VALUES', p_value)

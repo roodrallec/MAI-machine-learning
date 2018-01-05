@@ -85,8 +85,9 @@ hepa_data_set = [{'name': "hepatitis", 'dummy_value': "?", 'class_field': "Class
 if hep_res_part2 is None:
     hep_res_part2 = main_run(hepa_data_set,
                              kernel=['rbf'],
-                             C=[1, 5, 10, 15, 20, 30, 40, 50],
-                             gammas=np.linspace(0.05, 0.25, 5),
+                             C=[1, 5, 15, 30, 60, 75, 90],
+                             #gammas=np.linspace(0.01, 0.25, 5),
+                             gammas=[0.01, 0.05, 0.1, 0.15, 0.2],
                              plot_fig=False)
 if SAVE_PICKLE:
     hep_res_part2.to_pickle("hep_res_part2.df")

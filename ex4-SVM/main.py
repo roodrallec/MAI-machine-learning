@@ -140,8 +140,8 @@ penb_data_set = [{'name': "pen-based", 'dummy_value': "", 'class_field': "a17"}]
 if penb_res_part2 is None:
     penb_res_part2 = main_run(penb_data_set,
                              kernel=['rbf'],
-                             C=[50, 75, 100, 125, 250, 500, 750, 1000],
-                             gammas=np.linspace(0.05, 0.25, 5), plot_fig=False)
+                             C=[10, 100, 500, 1000, 5000, 10000],
+                             gammas=[0.01, 0.05, 0.1, 0.2, 0.5, 1.0], plot_fig=False)
 if SAVE_PICKLE:
     penb_res_part2.to_pickle("penb_res_part2.df")
 
